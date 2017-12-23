@@ -1,6 +1,18 @@
-# dos-2-planner
+# DOS 2 Planner
 
-> Nuxt.js project
+Character planner for Divinity Original Sin 2.
+
+Features:
+- Attributes
+- Combat abilities *(with detailed descriptions)*
+- Civil abilities *(with detailed descriptions)*
+- Talents *(with detailed descriptions and working effects)*
+
+> Vuetify & Nuxt.js project
+
+## Demo
+
+https://dos-2-planner.netlify.com/
 
 ## Build Setup
 
@@ -10,13 +22,8 @@ $ npm install # Or yarn install
 
 # serve with hot reload at localhost:3000
 $ npm run dev
-
-# build for production and launch server
-$ npm run build
-$ npm start
-
-# generate static project
-$ npm run generate
 ```
 
-For detailed explanation on how things work, checkout the [Nuxt.js docs](https://github.com/nuxt/nuxt.js).
+For detailed explanation on how things work, checkout the docs:
+- [Nuxt.js](https://github.com/nuxt/nuxt.js)
+- [Vuetify](https://vuetifyjs.com/vuetify/quick-start)
