@@ -48,7 +48,7 @@ export default {
 		return {
 			active: null,
 			level: 1,
-			name: "Tenak",
+			name: "Character Name",
             attr: {
                 value: 1,
                 bonus: 0
