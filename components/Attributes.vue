@@ -99,10 +99,10 @@ export default {
 		},
 		unspent() {
 			return (
-				this.base +
-				this.fromLevel +
-				this.bonus * this.value -
-				this.spent
+				this.base
+				+ this.fromLevel
+				+ (this.bonus * this.value)
+				- this.spent
 			);
 		}
 	},

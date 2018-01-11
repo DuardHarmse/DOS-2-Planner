@@ -67,11 +67,8 @@ export default {
 		items: getAbilities()
 	}),
 	computed: {
-		base() {
-			return 2 * this.value;
-		},
 		fromLevel() {
-			return this.level * this.value;
+			return (2 * this.value) + ((this.level - 1) * this.value);
 		},
 		spent() {
 			let total = 0;
@@ -83,7 +80,11 @@ export default {
 			return total;
 		},
 		unspent() {
-			return this.fromLevel + this.bonus - this.spent;
+			return (
+				this.fromLevel
+				+ (this.bonus * this.value)
+				- this.spent
+			);
 		}
 	},
 	methods: {
