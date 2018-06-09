@@ -8,6 +8,8 @@ Features:
 - Civil abilities *(with detailed descriptions)*
 - Talents *(with detailed descriptions and working effects)*
 
+For upcoming features please see the [current open projects](https://github.com/T3nak/DOS-2-Planner/projects).
+
 > Vuetify & Nuxt.js project
 
 ## Demo
