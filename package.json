@@ -12,11 +12,11 @@
     "precommit": "npm run lint"
   },
   "dependencies": {
-    "nuxt": "^1.0.0-rc11",
-    "vuetify": "^0.17.5"
+    "nuxt": "^1.4.1",
+    "vuetify": "^1.0.19"
   },
   "devDependencies": {
     "stylus": "^0.54.5",
-    "stylus-loader": "^3.0.1"
+    "stylus-loader": "^3.0.2"
   }
 }

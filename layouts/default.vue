@@ -1,7 +1,7 @@
 <template>
     <v-app>
-        <v-tabs v-model="active" centered>
-            <v-toolbar class="primary elevation-4 mb-3" dark>
+        <div>
+            <v-toolbar color="primary" class="elevation-4 mb-3" dark tabs>
                 <v-toolbar-title>
                     <input v-model="name" class="inline-input" style="width: 360px;">
                 </v-toolbar-title>
@@ -13,21 +13,28 @@
                 <v-btn icon @click="incLevel()">
                     <v-icon>add</v-icon>
                 </v-btn>
-                <v-tabs-bar slot="extension" class="primary" dark>
-                    <v-tabs-item href="#attributes" ripple>Attributes</v-tabs-item>
-                    <v-tabs-item href="#combat" ripple>Combat</v-tabs-item>
-                    <v-tabs-item href="#civil" ripple>Civil</v-tabs-item>
-                    <v-tabs-item href="#talents" ripple>Talents</v-tabs-item>
-                    <v-tabs-slider></v-tabs-slider>
-                </v-tabs-bar>
+                <v-tabs v-model="active" slot="extension" centered color="primary">
+                    <v-tab href="#attributes" ripple>Attributes</v-tab>
+                    <v-tab href="#combat" ripple>Combat</v-tab>
+                    <v-tab href="#civil" ripple>Civil</v-tab>
+                    <v-tab href="#talents" ripple>Talents</v-tab>
+                </v-tabs>
             </v-toolbar>
-            <v-tabs-items>
-                <Attributes :level="level" />
-                <Combat :level="level" />
-                <Civil :level="level" />
-                <Talents :level="level" />
+            <v-tabs-items v-model="active">
+                <v-tab-item id="attributes">
+                    <Attributes :level="level" />
+                </v-tab-item>
+                <v-tab-item id="combat">
+                    <Combat :level="level" />
+                </v-tab-item>
+                <v-tab-item id="civil">
+                    <Civil :level="level" />
+                </v-tab-item>
+                <v-tab-item id="talents">
+                    <Talents :level="level" />
+                </v-tab-item>
             </v-tabs-items>
-        </v-tabs>
+        </div>
     </v-app>
 </template>
 
