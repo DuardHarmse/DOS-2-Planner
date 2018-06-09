@@ -1,45 +1,43 @@
 <template>
-    <v-tabs-content id="civil">
-        <v-layout class="pa-3">
-            <v-flex xl6 offset-xl3 lg8 offset-lg2 md10 offset-md1>
-                <v-card flat>
-                    <v-card-text class="pa-0">
-                        <v-data-table v-bind:headers="headers" :items="items" item-key="name" hide-actions class="elevation-1">
-                            <template slot="headers" scope="props">
-                                <tr>
-                                    <th v-for="header in props.headers" v-if="header.id != 'unspent_civl'" :key="header.text" :class="getHeaderClass(header.align)">{{ header.text }}</th>
-                                    <th v-else :key="header.id" class="text-xs-right">{{ unspent }}{{ header.text }}</th>
-                                </tr>
-                            </template>
-                            <template slot="items" scope="props">
-                                <td>
-                                    <v-btn flat icon @click.stop="props.expanded = !props.expanded">
-                                        <v-icon v-if="props.expanded">keyboard_arrow_up</v-icon>
-                                        <v-icon v-else>keyboard_arrow_down</v-icon>
-                                    </v-btn>
-                                    <span>{{ props.item.name }}</span>
-                                </td>
-                                <td class="text-xs-right">
-                                    <v-btn flat icon @click="decAbility(props.item)">
-                                        <v-icon>remove</v-icon>
-                                    </v-btn>
-                                    <input v-model.number.lazy="props.item.points" @change="changeAbility(props.item)" class="text-xs-center inline-input">
-                                    <v-btn flat icon @click="incAbility(props.item)">
-                                        <v-icon>add</v-icon>
-                                    </v-btn>
-                                </td>
-                            </template>
-                            <template slot="expand" scope="props">
-                                <v-card flat>
-                                    <v-card-text>{{ props.item.description }}</v-card-text>
-                                </v-card>
-                            </template>
-                        </v-data-table>
-                    </v-card-text>
-                </v-card>
-            </v-flex>
-        </v-layout>
-    </v-tabs-content>
+    <v-layout id="civil" class="pa-3">
+        <v-flex xl6 offset-xl3 lg8 offset-lg2 md10 offset-md1>
+            <v-card flat>
+                <v-card-text class="pa-0">
+                    <v-data-table v-bind:headers="headers" :items="items" item-key="name" hide-actions class="elevation-1">
+                        <template slot="headers" slot-scope="props">
+                            <tr>
+                                <th v-for="header in props.headers" v-if="header.id != 'unspent_civl'" :key="header.text" :class="getHeaderClass(header.align)">{{ header.text }}</th>
+                                <th v-else :key="header.id" class="text-xs-right">{{ unspent }}{{ header.text }}</th>
+                            </tr>
+                        </template>
+                        <template slot="items" slot-scope="props">
+                            <td>
+                                <v-btn flat icon @click.stop="props.expanded = !props.expanded">
+                                    <v-icon v-if="props.expanded">keyboard_arrow_up</v-icon>
+                                    <v-icon v-else>keyboard_arrow_down</v-icon>
+                                </v-btn>
+                                <span>{{ props.item.name }}</span>
+                            </td>
+                            <td class="text-xs-right">
+                                <v-btn flat icon @click="decAbility(props.item)">
+                                    <v-icon>remove</v-icon>
+                                </v-btn>
+                                <input v-model.number.lazy="props.item.points" @change="changeAbility(props.item)" class="text-xs-center inline-input">
+                                <v-btn flat icon @click="incAbility(props.item)">
+                                    <v-icon>add</v-icon>
+                                </v-btn>
+                            </td>
+                        </template>
+                        <template slot="expand" slot-scope="props">
+                            <v-card flat>
+                                <v-card-text>{{ props.item.description }}</v-card-text>
+                            </v-card>
+                        </template>
+                    </v-data-table>
+                </v-card-text>
+            </v-card>
+        </v-flex>
+    </v-layout>
 </template>
 
 <script>

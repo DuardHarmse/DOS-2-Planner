@@ -1,34 +1,32 @@
 <template>
-    <v-tabs-content id="attributes">
-        <v-layout class="pa-3">
-            <v-flex xl6 offset-xl3 lg8 offset-lg2 md10 offset-md1>
-                <v-card flat>
-                    <v-card-text class="pa-0">
-                        <v-data-table v-bind:headers="headers" :items="items" hide-actions class="elevation-1">
-                            <template slot="headers" scope="props">
-                                <tr>
-                                    <th v-for="header in props.headers" v-if="header.id != 'unspent_attributes'" :key="header.text" :class="getHeaderClass(header.align)">{{ header.text }}</th>
-                                    <th v-else :key="header.id" class="text-xs-right">{{ unspent }}{{ header.text }}</th>
-                                </tr>
-                            </template>
-                            <template slot="items" scope="props">
-                                <td>{{ props.item.name }}</td>
-                                <td class="text-xs-right">
-                                    <v-btn flat icon @click="decAttribute(props.item)">
-                                        <v-icon>remove</v-icon>
-                                    </v-btn>
-                                    <input v-model.number.lazy="props.item.points" @change="changeAttribute(props.item)" class="text-xs-center inline-input">
-                                    <v-btn flat icon @click="incAttribute(props.item)">
-                                        <v-icon>add</v-icon>
-                                    </v-btn>
-                                </td>
-                            </template>
-                        </v-data-table>
-                    </v-card-text>
-                </v-card>
-            </v-flex>
-        </v-layout>
-    </v-tabs-content>
+    <v-layout id="attributes" class="pa-3">
+        <v-flex xl6 offset-xl3 lg8 offset-lg2 md10 offset-md1>
+            <v-card flat>
+                <v-card-text class="pa-0">
+                    <v-data-table v-bind:headers="headers" :items="items" hide-actions class="elevation-1">
+                        <template slot="headers" slot-scope="props">
+                            <tr>
+                                <th v-for="header in props.headers" v-if="header.id != 'unspent_attributes'" :key="header.text" :class="getHeaderClass(header.align)">{{ header.text }}</th>
+                                <th v-else :key="header.id" class="text-xs-right">{{ unspent }}{{ header.text }}</th>
+                            </tr>
+                        </template>
+                        <template slot="items" slot-scope="props">
+                            <td>{{ props.item.name }}</td>
+                            <td class="text-xs-right">
+                                <v-btn flat icon @click="decAttribute(props.item)">
+                                    <v-icon>remove</v-icon>
+                                </v-btn>
+                                <input v-model.number.lazy="props.item.points" @change="changeAttribute(props.item)" class="text-xs-center inline-input">
+                                <v-btn flat icon @click="incAttribute(props.item)">
+                                    <v-icon>add</v-icon>
+                                </v-btn>
+                            </td>
+                        </template>
+                    </v-data-table>
+                </v-card-text>
+            </v-card>
+        </v-flex>
+    </v-layout>
 </template>
 
 <script>
