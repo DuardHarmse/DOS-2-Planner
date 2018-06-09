@@ -35,6 +35,29 @@
                 </v-tab-item>
             </v-tabs-items>
         </div>
+
+        <v-bottom-nav :value="true" :active.sync="e1" fixed dark>
+            <v-btn flat value="1" color="primary">
+                <span v-text="name"></span>
+                <v-icon>account_circle</v-icon>
+            </v-btn>
+            <v-btn flat value="2" color="primary">
+                <span v-text="name"></span>
+                <v-icon>account_circle</v-icon>
+            </v-btn>
+            <v-btn flat value="3" color="primary">
+                <span v-text="name"></span>
+                <v-icon>account_circle</v-icon>
+            </v-btn>
+            <v-btn flat value="4" color="primary">
+                <span v-text="name"></span>
+                <v-icon>account_circle</v-icon>
+            </v-btn>
+        </v-bottom-nav>
+    
+        <v-btn dark fab fixed bottom right color="primary">
+            <v-icon>add</v-icon>
+        </v-btn>
     </v-app>
 </template>
 
@@ -59,7 +82,8 @@
                 attr: {
                     value: 1,
                     bonus: 0
-                }
+                },
+                e1: "1"
             };
         },
         methods: {
