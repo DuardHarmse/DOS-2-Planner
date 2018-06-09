@@ -32,44 +32,44 @@
 </template>
 
 <script>
-import Attributes from "~/components/Attributes.vue";
-import Combat from "~/components/Combat.vue"
-import Civil from "~/components/Civil.vue"
-import Talents from "~/components/Talents.vue";
+    import Attributes from "~/components/Attributes.vue";
+    import Combat from "~/components/Combat.vue"
+    import Civil from "~/components/Civil.vue"
+    import Talents from "~/components/Talents.vue";
 
-export default {
-	components: {
-		Attributes,
-        Combat,
-        Civil,
-		Talents
-	},
-	data() {
-		return {
-			active: null,
-			level: 1,
-			name: "Character Name",
-            attr: {
-                value: 1,
-                bonus: 0
+    export default {
+        components: {
+            Attributes,
+            Combat,
+            Civil,
+            Talents
+        },
+        data() {
+            return {
+                active: null,
+                level: 1,
+                name: "Character Name",
+                attr: {
+                    value: 1,
+                    bonus: 0
+                }
+            };
+        },
+        methods: {
+            incLevel() {
+                this.level++;
+            },
+            decLevel() {
+                if (this.level > 1) {
+                    this.level--;
+                }
+            },
+            changeLevel() {
+                if (this.level < 1) {
+                    debugger;
+                    this.level = 1;
+                }
             }
-		};
-	},
-	methods: {
-		incLevel() {
-			this.level++;
-		},
-		decLevel() {
-			if (this.level > 1) {
-				this.level--;
-			}
-		},
-		changeLevel() {
-			if (this.level < 1) {
-				debugger;
-				this.level = 1;
-			}
-		}
-	}
-};
+        }
+    };
 </script>
