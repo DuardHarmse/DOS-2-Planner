@@ -11,14 +11,14 @@
                             </tr>
                         </template>
                         <template slot="items" slot-scope="props">
-                            <td>
+                            <td class="px-2">
                                 <v-btn flat icon @click.stop="props.expanded = !props.expanded">
                                     <v-icon v-if="props.expanded">keyboard_arrow_up</v-icon>
                                     <v-icon v-else>keyboard_arrow_down</v-icon>
                                 </v-btn>
                                 <span>{{ props.item.name }}</span>
                             </td>
-                            <td class="text-xs-right">
+                            <td class="px-2 text-xs-right">
                                 <v-btn flat icon @click="decAbility(props.item)">
                                     <v-icon>remove</v-icon>
                                 </v-btn>

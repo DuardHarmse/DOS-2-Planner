@@ -18,6 +18,41 @@
 
 .tabs__items {
     // Toolbar height + bottom navigation height.
-    min-height: calc(100vh - 184px);
-    margin-bottom: 56px;
+    min-height: calc(100vh - 192px);
+    margin-bottom: 72px;
+}
+
+.bottom-nav {
+    height: auto !important;
+}
+
+.bottom-nav__scroll-container {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    overflow-x: auto;
+}
+
+.bottom-nav .btn .btn__content span {
+    width: 100%
+    display: block;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: clip;
+}
+
+.datatable__expand-col:not(.datatable__expand-col--expanded) {
+    display: none;
+}
+
+.bottom-nav .btn--active .btn__content {
+    font-size: 12px;
+}
+
+.bottom-nav .btn__content {
+    padding: 0 8px;
+}
+
+.list__tile.list__tile--avatar {
+    padding-left: 8px;
 }

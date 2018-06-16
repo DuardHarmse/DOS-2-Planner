@@ -1,67 +1,108 @@
 <template>
     <v-app>
-        <div>
-            <v-toolbar color="primary" class="elevation-4 mb-3" dark tabs>
-                <v-toolbar-title>
-                    <input v-model="name" class="inline-input" style="width: 360px;">
-                </v-toolbar-title>
-                <v-spacer></v-spacer>
-                <v-btn icon @click="decLevel()">
-                    <v-icon>remove</v-icon>
-                </v-btn>
-                <input v-model.number.lazy="level" @change="changeLevel()" class="text-xs-center inline-input">
-                <v-btn icon @click="incLevel()">
-                    <v-icon>add</v-icon>
-                </v-btn>
-                <v-tabs v-model="active" slot="extension" centered color="primary">
-                    <v-tab href="#attributes" ripple>Attributes</v-tab>
-                    <v-tab href="#combat" ripple>Combat</v-tab>
-                    <v-tab href="#civil" ripple>Civil</v-tab>
-                    <v-tab href="#talents" ripple>Talents</v-tab>
-                </v-tabs>
+        <v-navigation-drawer v-model="drawer" temporary fixed>
+            <v-toolbar flat>
+                <v-list>
+                    <v-list-tile>
+                        <v-list-tile-title class="title">DOS 2 Planner</v-list-tile-title>
+                    </v-list-tile>
+                </v-list>
             </v-toolbar>
-            <v-tabs-items v-model="active">
-                <v-tab-item id="attributes">
-                    <Attributes :level="level" />
-                </v-tab-item>
-                <v-tab-item id="combat">
-                    <Combat :level="level" />
-                </v-tab-item>
-                <v-tab-item id="civil">
-                    <Civil :level="level" />
-                </v-tab-item>
-                <v-tab-item id="talents">
-                    <Talents :level="level" />
-                </v-tab-item>
-            </v-tabs-items>
-        </div>
+            <v-divider></v-divider>
+            <v-list two-line subheader>
+                <v-subheader inset class="pr-0">
+                    <span>Party</span>
+                    <v-spacer></v-spacer>
+                    <v-btn flat icon color="primary" dark>
+                        <v-icon>add</v-icon>
+                    </v-btn>
+                </v-subheader>
+                <v-list-tile v-for="item in items" :key="item.title" avatar>
+                    <v-list-tile-avatar>
+                        <v-icon color="primary" dark>{{ item.icon }}</v-icon>
+                    </v-list-tile-avatar>
+                    <v-list-tile-content class="pl-2">
+                        <v-list-tile-title>{{ item.title }}</v-list-tile-title>
+                        <v-list-tile-sub-title>{{ item.subtitle }}</v-list-tile-sub-title>
+                    </v-list-tile-content>
+                    <v-list-tile-action>
+                        <v-btn icon ripple>
+                            <v-icon color="grey lighten-1">delete</v-icon>
+                        </v-btn>
+                    </v-list-tile-action>
+                </v-list-tile>
+            </v-list>
+            <v-divider></v-divider>
+            <v-list dense>
+                <v-list-tile @click="" ripple>
+                    <v-list-tile-action>
+                        <v-icon>settings</v-icon>
+                    </v-list-tile-action>
+                    <v-list-tile-content>
+                        <v-list-tile-title>Settings</v-list-tile-title>
+                    </v-list-tile-content>
+                </v-list-tile>
+            </v-list>
+        </v-navigation-drawer>
 
-        <v-bottom-nav :value="true" :active.sync="e1" fixed dark>
-            <v-btn flat value="1" color="primary">
-                <span v-text="name"></span>
-                <v-icon>account_circle</v-icon>
+        <v-toolbar color="primary" class="elevation-4 mb-3" dark tabs>
+            <v-toolbar-side-icon @click.stop="toggleDrawer"></v-toolbar-side-icon>
+            <v-toolbar-title>
+                <input v-model="name" class="inline-input" style="width: 360px;">
+            </v-toolbar-title>
+            <v-spacer></v-spacer>
+            <v-btn icon @click="decLevel()">
+                <v-icon>remove</v-icon>
             </v-btn>
-            <v-btn flat value="2" color="primary">
-                <span v-text="name"></span>
-                <v-icon>account_circle</v-icon>
+            <input v-model.number.lazy="level" @change="changeLevel()" class="text-xs-center inline-input">
+            <v-btn icon @click="incLevel()">
+                <v-icon>add</v-icon>
             </v-btn>
-            <v-btn flat value="3" color="primary">
-                <span v-text="name"></span>
-                <v-icon>account_circle</v-icon>
+            <v-tabs v-model="activeTab" slot="extension" centered color="primary">
+                <v-tab href="#overview" ripple>Overview</v-tab>
+                <v-tab href="#attributes" ripple>Attributes</v-tab>
+                <v-tab href="#combat" ripple>Combat</v-tab>
+                <v-tab href="#civil" ripple>Civil</v-tab>
+                <v-tab href="#talents" ripple>Talents</v-tab>
+            </v-tabs>
+        </v-toolbar>
+        <v-tabs-items v-model="activeTab">
+            <v-tab-item id="overview">
+                <Overview :level="level" :name="name" />
+            </v-tab-item>
+            <v-tab-item id="attributes">
+                <Attributes :level="level" />
+            </v-tab-item>
+            <v-tab-item id="combat">
+                <Combat :level="level" />
+            </v-tab-item>
+            <v-tab-item id="civil">
+                <Civil :level="level" />
+            </v-tab-item>
+            <v-tab-item id="talents">
+                <Talents :level="level" />
+            </v-tab-item>
+        </v-tabs-items>
+
+        <v-fab-transition>
+            <v-btn v-show="!hideFab" color="primary" dark fixed bottom right fab style="bottom: 72px;">
+                <v-icon>add</v-icon>
             </v-btn>
-            <v-btn flat value="4" color="primary">
-                <span v-text="name"></span>
-                <v-icon>account_circle</v-icon>
-            </v-btn>
+        </v-fab-transition>
+
+        <v-bottom-nav :value="true" :active.sync="bottomNav" fixed dark id="bottom-nav">
+            <div class="bottom-nav__scroll-container">
+                <v-btn v-for="partyMember in party" :key="partyMember" flat :value="partyMember" color="primary">
+                    <span v-text="name"></span>
+                    <v-icon>account_circle</v-icon>
+                </v-btn>
+            </div>
         </v-bottom-nav>
-    
-        <v-btn dark fab fixed bottom right color="primary">
-            <v-icon>add</v-icon>
-        </v-btn>
     </v-app>
 </template>
 
 <script>
+    import Overview from '~/components/Overview.vue';
     import Attributes from "~/components/Attributes.vue";
     import Combat from "~/components/Combat.vue"
     import Civil from "~/components/Civil.vue"
@@ -69,6 +110,7 @@
 
     export default {
         components: {
+            Overview,
             Attributes,
             Combat,
             Civil,
@@ -76,15 +118,27 @@
         },
         data() {
             return {
-                active: null,
+                activeTab: null,
                 level: 1,
-                name: "Character Name",
+                name: "Character",
                 attr: {
                     value: 1,
                     bonus: 0
                 },
-                e1: "1"
+                bottomNav: 1,
+                party: [1],
+                drawer: null,
+                items: [
+                    { icon: 'account_circle', title: 'Character #1', subtitle: 'Class goes here' },
+                    { icon: 'account_circle', title: 'Character #2', subtitle: 'Class goes here' },
+                    { icon: 'account_circle', title: 'Character #3', subtitle: 'Class goes here' }
+                ]
             };
+        },
+        computed: {
+            hideFab() {
+                return this.activeTab != 'overview';
+            }
         },
         methods: {
             incLevel() {
@@ -100,6 +154,9 @@
                     debugger;
                     this.level = 1;
                 }
+            },
+            toggleDrawer() {
+                this.drawer = !this.drawer;
             }
         }
     };

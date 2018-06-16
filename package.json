@@ -12,11 +12,16 @@
     "precommit": "npm run lint"
   },
   "dependencies": {
+    "@nuxtjs/pwa": "^2.0.8",
     "nuxt": "^1.4.1",
-    "vuetify": "^1.0.19"
+    "pouchdb": "^6.4.3",
+    "uuid": "^3.2.1",
+    "vuetify": "^1.0.19",
+    "workerize-loader": "^1.0.3"
   },
   "devDependencies": {
     "stylus": "^0.54.5",
-    "stylus-loader": "^3.0.2"
+    "stylus-loader": "^3.0.2",
+    "worker-loader": "^2.0.0"
   }
 }
