@@ -9,5 +9,6 @@ export default async ({ app }, inject) => {
     let dbWorker = worker();
 
     await dbWorker.initDb();
-    inject('worker', dbWorker);
+    app.db = dbWorker;
+    inject('db', dbWorker);
 }

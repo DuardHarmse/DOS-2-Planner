@@ -32,6 +32,20 @@
 <script>
     export default {
         props: ['level'],
+        mounted() {
+            this.$watch("level", function(newVal, oldVal) {
+                if (newVal < oldVal) {
+                    this.resetAttributes();
+                }
+            });
+
+            this.$ee.on('resetAttributes', this.resetAttributes);
+            this.$ee.on('incAttrValue', this.incValue);
+            this.$ee.on('incAttrBonus', this.incBonus);
+            this.$ee.once('talentsApplied', () => {
+                this.items = this.$ac.attributes;
+            });
+        },
         data: data => ({
             value: 1,
             bonus: 0,
@@ -46,38 +60,7 @@
                     align: "right"
                 }
             ],
-            items: [
-                {
-                    value: false,
-                    name: "Strength",
-                    points: 10
-                },
-                {
-                    value: false,
-                    name: "Finesse",
-                    points: 10
-                },
-                {
-                    value: false,
-                    name: "Intelligence",
-                    points: 10
-                },
-                {
-                    value: false,
-                    name: "Constitution",
-                    points: 10
-                },
-                {
-                    value: false,
-                    name: "Wits",
-                    points: 10
-                },
-                {
-                    value: false,
-                    name: "Memory",
-                    points: 10
-                }
-            ]
+            items: []
         }),
         computed: {
             base() {
@@ -140,17 +123,6 @@
             incBonus(inc) {
                 this.bonus += inc;
             }
-        },
-        mounted() {
-            this.$watch("level", function(newVal, oldVal) {
-                if (newVal < oldVal) {
-                    this.resetAttributes();
-                }
-            });
-
-            this.$parent.$on('resetAttributes', this.resetAttributes);
-            this.$parent.$on('incAttrValue', this.incValue);
-            this.$parent.$on('incAttrBonus', this.incBonus);
         }
     };
 </script>

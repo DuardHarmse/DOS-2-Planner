@@ -1,0 +1,37 @@
+[
+  {
+    "_id": "dwarf",
+    "description": "Dwarf",
+    "skills": [
+      "Petrifying Touch"
+    ]
+  },
+  {
+    "_id": "elf",
+    "description": "Elf",
+    "skills": [
+      "Flesh Sacrifice"
+    ]
+  },
+  {
+    "_id": "human",
+    "description": "Human",
+    "skills": [
+      "Encourage"
+    ]
+  },
+  {
+    "_id": "lizard",
+    "description": "Lizard",
+    "skills": [
+      "Dragon's Blaze"
+    ]
+  },
+  {
+    "_id": "undead",
+    "description": "Undead",
+    "skills": [
+      "Play Dead"
+    ]
+  }
+]

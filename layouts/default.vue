@@ -48,7 +48,7 @@
         <v-toolbar color="primary" class="elevation-4 mb-3" dark tabs>
             <v-toolbar-side-icon @click.stop="toggleDrawer"></v-toolbar-side-icon>
             <v-toolbar-title>
-                <input v-model="name" class="inline-input" style="width: 360px;">
+                <input v-model="name" class="inline-input" :disabled="disableName" style="width: 360px;">
             </v-toolbar-title>
             <v-spacer></v-spacer>
             <v-btn icon @click="decLevel()">
@@ -98,6 +98,11 @@
                 </v-btn>
             </div>
         </v-bottom-nav>
+
+        <v-snackbar :timeout="snackbarTimeout" bottom v-model="snackbar">
+            {{ snackbarMessage }}
+            <v-btn flat color="pink" @click.native="snackbar = false">Close</v-btn>
+        </v-snackbar>
     </v-app>
 </template>
 
@@ -109,6 +114,22 @@
     import Talents from "~/components/Talents.vue";
 
     export default {
+        mounted() {
+            this.level = this.$ac.level;
+            this.name = this.$ac.name;
+
+            this.$ee.on('updateName', (name) => {
+                this.name = name;
+            });
+            this.$ee.on('disableName', (disable) => {
+                this.disableName = disable;
+            });
+            this.$ee.on('updateLevel', (level) => {
+                this.level = level;
+            });
+
+            this.$ee.on('toast', this.toast);
+        },
         components: {
             Overview,
             Attributes,
@@ -120,11 +141,7 @@
             return {
                 activeTab: null,
                 level: 1,
-                name: "Character",
-                attr: {
-                    value: 1,
-                    bonus: 0
-                },
+                name: '',
                 bottomNav: 1,
                 party: [1],
                 drawer: null,
@@ -132,7 +149,11 @@
                     { icon: 'account_circle', title: 'Character #1', subtitle: 'Class goes here' },
                     { icon: 'account_circle', title: 'Character #2', subtitle: 'Class goes here' },
                     { icon: 'account_circle', title: 'Character #3', subtitle: 'Class goes here' }
-                ]
+                ],
+                disableName: false,
+                snackbar: false,
+                snackbarTimeout: 2500,
+                snackbarMessage: ''
             };
         },
         computed: {
@@ -157,6 +178,10 @@
             },
             toggleDrawer() {
                 this.drawer = !this.drawer;
+            },
+            toast(message) {
+                this.snackbarMessage = message;
+                this.snackbar = true;
             }
         }
     };

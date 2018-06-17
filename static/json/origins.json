@@ -1,0 +1,64 @@
+[
+  {
+    "_id": "custom",
+    "description": "Custom",
+    "race": null,
+    "skills": [
+      "Dome of Protection"
+    ]
+  },
+  {
+    "_id": "beast",
+    "description": "Beast",
+    "race": "dwarf",
+    "skills": [
+      "Petrifying Touch",
+      "Blinding Squall"
+    ]
+  },
+  {
+    "_id": "fane",
+    "description": "Fane",
+    "race": "undead",
+    "skills": [
+      "Play Dead",
+      "Time Warp"
+    ]
+  },
+  {
+    "_id": "ifan",
+    "description": "Ifan Ben-Mezd",
+    "race": "human",
+    "skills": [
+      "Encourage",
+      "Summon Ifan's Soul Wolf"
+    ]
+  },
+  {
+    "_id": "lohse",
+    "description": "Lohse",
+    "race": "human",
+    "skills": [
+      "Encourage",
+      "Maddening Song"
+    ]
+  },
+  {
+    "_id": "sebille",
+    "description": "Sebille",
+    "race": "elf",
+    "skills": [
+      "Flesh Sacrifice",
+      "Break the Shackles"
+    ]
+  },
+  {
+    "_id": "red-prince",
+    "description": "The Red Prince",
+    "race": "lizard",
+    "skills": [
+      "Dragon's Blaze",
+      "Demonic Stare"
+    ]
+  }
+]

@@ -1,0 +1,32 @@
+[
+  {
+    "_id": "strength",
+    "name": "Strength",
+    "points": 10
+  },
+  {
+    "_id": "finesse",
+    "name": "Finesse",
+    "points": 10
+  },
+  {
+    "_id": "intelligence",
+    "name": "Intelligence",
+    "points": 10
+  },
+  {
+    "_id": "constitution",
+    "name": "Constitution",
+    "points": 10
+  },
+  {
+    "_id": "wits",
+    "name": "Wits",
+    "points": 10
+  },
+  {
+    "_id": "memory",
+    "name": "Memory",
+    "points": 10
+  }
+]

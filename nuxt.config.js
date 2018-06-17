@@ -16,7 +16,9 @@ module.exports = {
     },
     plugins: [
         '~/plugins/vuetify.js',
-        { src: '~/plugins/db-worker', ssr: false }
+        { src: '~/plugins/db-worker', ssr: false },
+        { src: '~/plugins/character-state', ssr: false },
+        '~/plugins/event-emitter.js'
     ],
     css: [
         { src: '~/assets/style/app.styl', lang: 'styl' }
