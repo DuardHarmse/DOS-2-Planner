@@ -62,19 +62,19 @@
                 <v-tab href="#overview" ripple>Overview</v-tab>
                 <v-tab href="#attributes" ripple>
                     Attributes
-                    <v-subheader class="pl-2 pr-0">2</v-subheader>
+                    <v-subheader class="pl-2 pr-0">{{ attributeState.unspent }}</v-subheader>
                 </v-tab>
                 <v-tab href="#combat" ripple>
                     Combat
-                    <v-subheader class="pl-2 pr-0">2</v-subheader>
+                    <v-subheader class="pl-2 pr-0">{{ combatAbilityState.unspent }}</v-subheader>
                 </v-tab>
                 <v-tab href="#civil" ripple>
                     Civil
-                    <v-subheader class="pl-2 pr-0">2</v-subheader>
+                    <v-subheader class="pl-2 pr-0">{{ civilAbilityState.unspent }}</v-subheader>
                 </v-tab>
                 <v-tab href="#talents" ripple>
                     Talents
-                    <v-subheader class="pl-2 pr-0">2</v-subheader>
+                    <v-subheader class="pl-2 pr-0">{{ talentState.unspent }}</v-subheader>
                 </v-tab>
             </v-tabs>
         </v-toolbar>
@@ -88,12 +88,12 @@
             <v-tab-item id="combat">
                 <Combat />
             </v-tab-item>
-            <!-- <v-tab-item id="civil">
+            <v-tab-item id="civil">
                 <Civil />
-            </v-tab-item> -->
-            <!-- <v-tab-item id="talents">
+            </v-tab-item>
+            <v-tab-item id="talents">
                 <Talents />
-            </v-tab-item> -->
+            </v-tab-item>
         </v-tabs-items>
 
         <v-fab-transition>
@@ -127,10 +127,13 @@
 
     export default {
         mounted() {
-            // this.characterState = this.$ac;
             this.partyState = this.$ap;
             this.activeCharacter = this.characterState._id;
-            // this.characterState = this.partyState.members[this.partyState.activeCharacter];
+
+            this.attributeState = this.$attributeStore;
+            this.combatAbilityState = this.$combatAbilityStore;
+            this.civilAbilityState = this.$civilAbilityStore;
+            this.talentState = this.$talentStore;
 
             for (let party of this.parties) {
                 party.btnDeleteColor = this.btnDeleteColorDefault;
@@ -151,12 +154,12 @@
             activeCharacter: '',
             activeParty: '',
             activeTab: '',
+            attributeState: { unspent: 0 },
+            combatAbilityState: { unspent: 0 },
+            civilAbilityState: { unspent: 0 },
+            talentState: { unspent: 0 },
             btnDeleteColorConfirm: 'red',
             btnDeleteColorDefault: 'accent',
-            // characterState: {
-            //     name: '',
-            //     level: 1
-            // },
             dialog: false,
             drawer: null,
             nameDisabled: false,

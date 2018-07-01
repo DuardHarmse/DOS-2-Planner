@@ -45,7 +45,7 @@
 <script>
     export default {
         mounted() {
-            this.characterState = this.$ac;
+            this.partyState = this.$ap;
 
             this.$watch("level", function(newVal, oldVal) {
                 if (newVal < oldVal && this.unspent < 0) {
@@ -119,9 +119,6 @@
         },
         data: () => ({
             bonus: 0,
-            characterState: {
-                talents: []
-            },
             headers: [
                 {
                     id: "column_talent",
@@ -139,9 +136,20 @@
             items: [],
             pagination: {
                 sortBy: "name"
-            }
+            },
+            partyState: {}
         }),
         computed: {
+            characterState() {
+                if (this.partyState && this.partyState.members) {
+                    return this.partyState.members[this.partyState.activeCharacter];
+                }
+                else {
+                    return {
+                        talents: []
+                    };
+                }
+            },
             fromLevel() {
                 if (this.characterState.level > 4) return parseInt((this.characterState.level - 3) / 5 + 2);
                 if (this.characterState.level > 2) return 2;
@@ -151,7 +159,11 @@
                 return this.characterState.talents.length;
             },
             unspent() {
-                return this.fromLevel + this.bonus - this.spent;
+                let unspent = this.fromLevel + this.bonus - this.spent;
+
+                this.$talentStore.unspent = unspent;
+
+                return unspent;
             },
             percentage() {
                 return this.spent / (this.fromLevel + this.bonus) * 100;

@@ -17,7 +17,11 @@ module.exports = {
     plugins: [
         '~/plugins/vuetify.js',
         { src: '~/plugins/db-worker', ssr: false },
-        { src: '~/plugins/character-state', ssr: false },
+        { src: '~/plugins/stores/party-store', ssr: false },
+        '~/plugins/stores/attribute-store',
+        '~/plugins/stores/combat-ability-store',
+        '~/plugins/stores/civil-ability-store',
+        '~/plugins/stores/talent-store',
         '~/plugins/event-emitter.js'
     ],
     css: [

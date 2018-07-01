@@ -91,12 +91,15 @@
                 return total;
             },
             unspent() {
-                return (
+                let unspent =
                     this.base
                     + this.fromLevel
                     + (this.bonus * this.value)
-                    - this.spent
-                );
+                    - this.spent;
+
+                this.$attributeStore.unspent = unspent;
+
+                return unspent
             },
             percentage() {
                 return ((this.spent - this.base) / (this.fromLevel + (this.bonus * this.value))) * 100;

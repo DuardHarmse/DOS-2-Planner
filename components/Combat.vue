@@ -106,11 +106,14 @@
                 return total;
             },
             unspent() {
-                return (
+                let unspent = 
                     this.fromLevel
                     + (this.bonus * this.value)
-                    - this.spent
-                );
+                    - this.spent;
+
+                this.$combatAbilityStore.unspent = unspent;
+
+                return unspent;
             },
             percentage() {
                 return (this.spent / (this.fromLevel + (this.bonus * this.value))) * 100;

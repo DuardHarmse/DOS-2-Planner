@@ -44,7 +44,7 @@
 <script>
     export default {
         mounted() {
-            this.characterState = this.$ac;
+            this.partyState = this.$ap;
 
             this.$watch("level", function(newVal, oldVal) {
                 if (newVal < oldVal) {
@@ -62,9 +62,6 @@
         },
         data: () => ({
             bonus: 0,
-            characterState: {
-                civilAbilities: {}
-            },
             headers: [
                 {
                     text: "Ability",
@@ -81,9 +78,20 @@
             items: [],
             pagination: {
                 sortBy: "name"
-            }
+            },
+            partyState: {}
         }),
         computed: {
+            characterState() {
+                if (this.partyState && this.partyState.members) {
+                    return this.partyState.members[this.partyState.activeCharacter];
+                }
+                else {
+                    return {
+                        civilAbilities: {}
+                    };
+                }
+            },
             fromLevel() {
                 if (this.characterState.level > 2) return parseInt((this.characterState.level - 2) / 4 + 2);
                 if (this.characterState.level > 1) return 2;
@@ -99,7 +107,11 @@
                 return total;
             },
             unspent() {
-                return this.fromLevel + this.bonus - this.spent;
+                let unspent = this.fromLevel + this.bonus - this.spent;
+
+                this.$civilAbilityStore.unspent = unspent;
+                
+                return unspent;
             },
             percentage() {
                 return (this.spent / (this.fromLevel + this.bonus)) * 100;
