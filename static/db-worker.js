@@ -77,35 +77,13 @@ async function getAll(dbName) {
     return docs;
 }
 
-async function compact(dbNameOrReference) {
-    let db = null;
-
-    if (typeof dbNameOrReference == 'string') {
-        db = new PouchDB(dbNameOrReference);
-    }
-    else {
-        db = dbNameOrReference;
-    }
-
-    let result = null;
-
-    try {
-        result = await db.compact();
-    }
-    catch (err) {
-        console.error(err);
-    }
-
-    return result;
-}
-
 export function ping() {
     return 'pong';
 }
 
 export async function initDb() {
     try {
-        if (await dbExists(['races', 'origins', 'party', 'combat-abilities', 'civil-abilities', 'talents'], true)) {
+        if (await dbExists(['races', 'origins', 'characters', 'parties', 'combat-abilities', 'civil-abilities', 'talents'], true)) {
             return true;
         }
 
@@ -121,13 +99,14 @@ export async function initDb() {
 
         let dbRaces = new MiniPouchDB('races'),
             dbOrigins = new MiniPouchDB('origins'),
-            dbParty = new MiniPouchDB('party'),
+            dbCharacters = new MiniPouchDB('characters'),
+            dbParties = new MiniPouchDB('parties'),
 
             dbCombatAbilities = new MiniPouchDB('combat-abilities'),
             dbCivilAbilities = new MiniPouchDB('civil-abilities'),
             dbTalents = new MiniPouchDB('talents');
 
-        let party = [
+        let characters = [
             {
                 _id: uuidv1(),
                 name: 'Character #1',
@@ -140,16 +119,27 @@ export async function initDb() {
                 talents: []
             }
         ];
-
-        party.push({
+        characters.push({
             _id: 'active',
-            character: party[0]._id
+            character: characters[0]._id
+        });
+
+        let parties = [
+            {
+                _id: uuidv1(),
+                members: [characters[0]._id]
+            }
+        ];
+        parties.push({
+            _id: 'active',
+            party: parties[0]._id
         });
 
         return (await new ConcurrentAsyncTask(
             dbRaces.bulkDocs(races),
             dbOrigins.bulkDocs(origins),
-            dbParty.bulkDocs(party),
+            dbCharacters.bulkDocs(characters),
+            dbParties.bulkDocs(parties),
             dbCombatAbilities.bulkDocs(combatAbilities),
             dbCivilAbilities.bulkDocs(civilAbilities),
             dbTalents.bulkDocs(talents)
@@ -170,29 +160,58 @@ export async function getOrigins() {
     return await getAll('origins');
 }
 
-export async function getActiveCharacter() {
-    var db = new PouchDB('party');
-    var doc = await db.get('active');
-    var activeCharacter = db.get(doc.character);
+export async function getActiveParty() {
+    let dbParties = new PouchDB('parties');
 
-    return activeCharacter;
+    let activePartyIndicator = await dbParties.get('active');
+    let activeParty = await dbParties.get(activePartyIndicator.party);
+
+    // Include characters.
+    let dbCharacters = new PouchDB('characters');
+    let members = (await dbCharacters.allDocs({
+        include_docs: true,
+        keys: activeParty.members
+    })).rows.map((member) => member.doc);
+
+    // Include combat abilities.
+    let allCombatAbilities = await getAll('combat-abilities');
+
+    // Include civil abilities.
+    let allCivilAbilities = await getAll('civil-abilities');
+
+    // Update properties for each member.
+    for (let i = 0, l = members.length; i < l; i++) {
+        let member = members[i];
+        let combatAbilities = {};
+        let civilAbilities = {};
+    
+        for (let j = 0, m = allCombatAbilities.length; j < m; j++) {
+            combatAbilities[allCombatAbilities[j]._id] = 0;
+        }
+    
+        for (let j = 0, m = allCivilAbilities.length; j < m; j++) {
+            civilAbilities[allCivilAbilities[j]._id] = 0;
+        }
+
+        member.combatAbilities = Object.assign(combatAbilities, member.combatAbilities);
+        member.civilAbilities = Object.assign(civilAbilities, member.civilAbilities);
+    }
+
+    activeParty.members = members;
+
+
+    return activeParty;
 }
 
-export async function updateActiveCharacter(activeCharacter) {
-    let db = new PouchDB('party');
-    compact(db);
+export async function addPartyMember() {
+    var dbParties = new PouchDB('parties');
+    var activePartyIndicator = await dbParties.get('active');
+    var activeParty = await dbParties.get(activePartyIndicator.party);
 
-    return await db.put(activeCharacter);
-}
-
-export async function resetActiveCharacter(activeCharacter) {
-    let db = new PouchDB('party');
-
-    await db.remove(activeCharacter);
-
-    let result = await db.put({
+    var dbCharacters = new PouchDB('characters');
+    var result = await dbCharacters.put({
         _id: uuidv1(),
-        name: 'Character #1',
+        name: `Character #${activeParty.members.length + 1}`,
         origin: 'custom',
         race: 'dwarf',
         level: 1,
@@ -202,13 +221,82 @@ export async function resetActiveCharacter(activeCharacter) {
         talents: []
     });
 
-    let doc = await db.get('active');
-    doc.character = result.id;
-    await db.put(doc);
+    activeParty.members.push(result.id);
+    await dbParties.put(activeParty);
 
-    compact(db);
+    return await dbCharacters.get(result.id);
+}
 
-    return await db.get(result.id);
+export async function updateCharacter(character) {
+    let db = new PouchDB('characters');
+
+    let combatAbilities = character.combatAbilities,
+        civilAbilities = character.civilAbilities;
+
+    for (let combatAbility in character.combatAbilities) {
+        let points = character.combatAbilities[combatAbility];
+
+        if (points <= 0) {
+            delete character.combatAbilities[combatAbility];
+        }
+    }
+
+    for (let civilAbility in character.civilAbilities) {
+        let points = character.civilAbilities[civilAbility];
+
+        if (points <= 0) {
+            delete character.civilAbilities[civilAbility];
+        }
+    }
+
+    let updatedCharacter = await db.put(character);
+
+    updatedCharacter.combatAbilities = combatAbilities;
+    updatedCharacter.civilAbilities = civilAbilities;
+
+    return updatedCharacter;
+}
+
+export async function resetCharacter(character) {
+    let dbCharacters = new PouchDB('characters');
+
+    Object.assign(character, {
+        name: 'Character #1',
+        origin: 'custom',
+        race: 'dwarf',
+        level: 1,
+        combatAbilities: {},
+        civilAbilities: {},
+        talents: []
+    });
+
+    for (let attribute of character.attributes) {
+        attribute.points = 10;
+    }
+
+    let result = await dbCharacters.put(character);
+
+    return await dbCharacters.get(result.id);
+}
+
+export async function deleteCharacter(character, party) {
+    let dbCharacters = new PouchDB('characters');
+    let dbParties = new PouchDB('parties');
+
+    // Remove deleted character from the party's member array.
+    party.members.splice(party.members.indexOf(character._id), 1);
+
+    let members = party.members;
+    party.members = party.members.map(member => member._id);
+    
+    await dbCharacters.remove(character);    
+
+    let result = await dbParties.put(party);
+    party = await dbParties.get(result.id);
+
+    party.members = members;
+
+    return party;
 }
 
 export async function getCombatAbilities() {
@@ -221,4 +309,10 @@ export async function getCivilAbilities() {
 
 export async function getTalents() {
     return await getAll('talents');
+}
+
+export function deleteParty() {
+    return new Promise((resolve) => {
+        setTimeout(resolve, 1000);
+    });
 }

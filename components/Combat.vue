@@ -3,13 +3,14 @@
         <v-flex xl6 offset-xl3 lg8 offset-lg2 md10 offset-md1>
             <v-card flat>
                 <v-card-text class="pa-0">
-                    <v-data-table v-bind:headers="headers" :items="items" item-key="name" hide-actions class="elevation-1">
+                    <v-data-table v-bind:headers="headers" :items="items" item-key="name" :loading="true" hide-actions class="elevation-1">
                         <template slot="headers" slot-scope="props">
                             <tr>
                                 <th v-for="header in props.headers" v-if="header.id != 'unspent_cmbt'" :key="header.text" :class="getHeaderClass(header.align)">{{ header.text }}</th>
                                 <th v-else :key="header.id" class="text-xs-right">{{ unspent }}{{ header.text }}</th>
                             </tr>
                         </template>
+                        <v-progress-linear v-model="percentage" slot="progress" color="blue"></v-progress-linear>
                         <template slot="items" slot-scope="props">
                             <td class="px-2">
                                 <v-btn flat icon @click.stop="props.expanded = !props.expanded">
@@ -22,7 +23,7 @@
                                 <v-btn flat icon @click="decAbility(props.item)">
                                     <v-icon>remove</v-icon>
                                 </v-btn>
-                                <input v-model.number.lazy="props.item.points" @change="changeAbility(props.item)" class="text-xs-center inline-input">
+                                <input v-model.number.lazy="characterState.combatAbilities[props.item._id]" @change="changeAbility(props.item)" class="text-xs-center inline-input">
                                 <v-btn flat icon @click="incAbility(props.item)">
                                     <v-icon>add</v-icon>
                                 </v-btn>
@@ -42,8 +43,9 @@
 
 <script>
     export default {
-        props: ["level"],
         mounted() {
+            this.partyState = this.$ap;
+
             this.$watch("level", function(newVal, oldVal) {
                 if (newVal < oldVal) {
                     this.resetAbilities();
@@ -53,26 +55,13 @@
             this.$ee.on("resetCmbtAbilities", this.resetAbilities);
             this.$ee.on("incCmbtValue", this.incValue);
             this.$ee.on("incCmbtBonus", this.incBonus);
-            this.$ee.once('talentsApplied', () => {
-                for (let i = 0, l = this.items.length; i < l; i++) {
-                    let combatAbility = this.items[i];
-
-                    if (this.$ac.combatAbilities[combatAbility._id]) {
-                        combatAbility.points = this.$ac.combatAbilities[combatAbility._id];
-                    }
-                }
-            });
 
             this.$db.getCombatAbilities().then((combatAbilities) => {
                 this.items = combatAbilities;
             });
         },
         data: () => ({
-            value: 1,
             bonus: 0,
-            pagination: {
-                sortBy: "name"
-            },
             headers: [
                 {
                     text: "Ability",
@@ -86,17 +75,32 @@
                     align: "right"
                 }
             ],
-            items: []
+            items: [],
+            pagination: {
+                sortBy: "name"
+            },
+            partyState: {},
+            value: 1
         }),
         computed: {
+            characterState() {
+                if (this.partyState && this.partyState.members) {
+                    return this.partyState.members[this.partyState.activeCharacter];
+                }
+                else {
+                    return {
+                        combatAbilities: {}
+                    };
+                }
+            },
             fromLevel() {
-                return (2 * this.value) + ((this.level - 1) * this.value);
+                return (2 * this.value) + ((this.characterState.level - 1) * this.value);
             },
             spent() {
                 let total = 0;
 
-                for (let i = 0, l = this.items.length; i < l; i++) {
-                    total += this.items[i].points;
+                for (let ability in this.characterState.combatAbilities) {
+                    total += this.characterState.combatAbilities[ability];
                 }
 
                 return total;
@@ -107,6 +111,9 @@
                     + (this.bonus * this.value)
                     - this.spent
                 );
+            },
+            percentage() {
+                return (this.spent / (this.fromLevel + (this.bonus * this.value))) * 100;
             }
         },
         methods: {
@@ -119,21 +126,12 @@
             },
             incAbility: function(item) {
                 if (this.unspent > 0) {
-                    item.points += this.value;
+                    this.characterState.combatAbilities[item._id] += this.value;
                 }
-
-                this.$ac.combatAbilities[item._id] = item.points;
             },
             decAbility: function(item) {
-                if (item.points > 0) {
-                    item.points -= this.value;
-                }
-
-                if (item.points == 0) {
-                    delete this.$ac.combatAbilities[item._id];
-                }
-                else {
-                    this.$ac.combatAbilities[item._id] = item.points;
+                if (this.characterState.combatAbilities[item._id] > 0) {
+                    this.characterState.combatAbilities[item._id] -= this.value;
                 }
             },
             resetAbilities: function() {
@@ -143,9 +141,9 @@
             },
             changeAbility: function(item) {
                 if (this.unspent < 0) {
-                    item.points += this.unspent;
-                } else if (item.points < 0) {
-                    item.points = 0;
+                    this.characterState.combatAbilities[item._id] += this.unspent;
+                } else if (this.characterState.combatAbilities[item._id] < 0) {
+                    this.characterState.combatAbilities[item._id] = 0;
                 }
             },
             incValue(inc) {

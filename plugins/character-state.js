@@ -1,4 +1,6 @@
 export default async ({ app }, inject) => {
-    let activeCharacter = await app.$db.getActiveCharacter();
-    inject('ac', activeCharacter);
+    let activeParty = await app.$db.getActiveParty();
+    activeParty.activeCharacter = 0;
+    
+    inject('ap', activeParty);
 }

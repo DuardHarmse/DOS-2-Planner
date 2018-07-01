@@ -3,5 +3,9 @@
 </template>
 
 <script>
-    export default {};
+    export default {
+        data: data => ({
+            test: true
+        })
+    };
 </script>
