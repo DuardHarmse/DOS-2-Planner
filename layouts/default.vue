@@ -24,7 +24,7 @@
                     <v-list-tile-content class="pl-2">
                         <v-list-tile-title>{{ item.name }}</v-list-tile-title>
                     </v-list-tile-content>
-                    <v-list-tile-action>
+                    <v-list-tile-action v-if="parties.length > 1">
                         <v-btn icon ripple @click.stop="confirmDeleteParty(item)" :disabled="item.btnDleteDisabled">
                             <v-icon :color="item.btnDeleteColor">delete</v-icon>
                         </v-btn>
@@ -33,7 +33,7 @@
             </v-list>
             <v-divider></v-divider>
             <v-list dense>
-                <v-list-tile @click="" ripple>
+                <v-list-tile @click="() => {}" ripple :disabled="true">
                     <v-list-tile-action>
                         <v-icon>settings</v-icon>
                     </v-list-tile-action>
@@ -185,7 +185,7 @@
                 }
             },
             hideFab() {
-                return this.activeTab != 'overview';
+                return this.activeTab != 'overview' || this.partyState.members.length >= 4;
             }
         },
         methods: {
@@ -216,8 +216,14 @@
                 this.activeCharacter.character = character._id;
             },
             switchParty(party) {
-                this.activeParty = party._id;
-                this.drawer = false;
+                this.$db.getParty(party._id).then((newParty) => {
+                    Object.assign(this.partyState, newParty);
+                    this.switchCharacter(this.partyState.members[0]);
+                    
+                    this.drawer = false;
+                }).catch((err) => {
+                    console.error(err);
+                });
             },
             checkParty(party) {
                 if (party._id == this.activeParty) {
@@ -243,15 +249,9 @@
                 }
             },
             addPartyMember() {
-                this.$db.addPartyMember().then((result) => {
-                    let members = this.partyState.members.slice();
-                    members.push({
-                        _id: result.character._id,
-                        name: result.character.name
-                    });
-
-                    Object.assign(this.partyState, result.party);
-                    this.partyState.members = members;
+                this.$db.addPartyMember(this.partyState).then((result) => {
+                    this.partyState.members.push(result.character);
+                    this.partyState._rev = result.party._rev;
 
                     this.switchCharacter(this.partyState.members[this.partyState.members.length - 1]);
                 });

@@ -194,14 +194,19 @@ export async function getParties() {
     return parties;
 }
 
-export async function getActiveParty() {
-    let dbParties = new PouchDB('parties');
+export async function getParty(party) {
+    let dbParties = dbs.parties();
+    let activeParty;
 
-    let activePartyIndicator = await dbParties.get('active');
-    let activeParty = await dbParties.get(activePartyIndicator.party);
+    if (typeof(party) == 'string') {
+        activeParty = await dbParties.get(party);
+    }
+    else {
+        activeParty = await dbParties.get(party._id);
+    }
 
     // Include characters.
-    let dbCharacters = new PouchDB('characters');
+    let dbCharacters = dbs.characters();
     let members = (await dbCharacters.allDocs({
         include_docs: true,
         keys: activeParty.members
@@ -212,6 +217,15 @@ export async function getActiveParty() {
     }
 
     activeParty.members = members
+
+    return activeParty;
+}
+
+export async function getActiveParty() {
+    let dbParties = dbs.parties();
+
+    let activePartyIndicator = await dbParties.get('active');
+    let activeParty = await getParty(activePartyIndicator.party);
 
     return activeParty;
 }

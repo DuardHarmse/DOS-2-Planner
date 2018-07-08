@@ -32,18 +32,7 @@
                 </v-card-text>
                 <v-card-actions>
                     <v-btn flat color="primary" @click="save" :disabled="btnSaveDisabled">Save</v-btn>
-                    <v-btn flat :color="btnDeleteColor" @click="confirmDelete" :disabled="btnDeleteDisabled">{{ btnDeleteText }}</v-btn>
-                    <v-progress-circular
-                        :rotate="360"
-                        :size="36"
-                        :width="3"
-                        :value="btnDeleteProgress"
-                        color="primary"
-                    >
-                        <v-btn icon ripple>
-                            <v-icon>delete</v-icon>
-                        </v-btn>
-                    </v-progress-circular>
+                    <v-btn flat :color="btnDeleteColor" @click="confirmDelete" :disabled="btnDeleteDisabled" v-if="partyState.members.length > 1">{{ btnDeleteText }}</v-btn>
                 </v-card-actions>
             </v-card>
         </v-flex>
@@ -94,14 +83,15 @@
             btnDeleteColorConfirm: 'red',
             btnDeleteColorDefault: 'accent',
             btnDeleteIsConfirming: false,
-            btnDeleteProgress: 0,
             btnDeleteText: '',
             btnDeleteTextConfirm: 'Confirm delete',
             btnDeleteTextDefault: 'Delete',
             btnDeleteTimeout: null,
             btnSaveDisabled: false,
             origins: [],
-            partyState: {},
+            partyState: {
+                members: []
+            },
             races: []
         }),
         computed: {
@@ -176,17 +166,7 @@
                     this.btnDeleteIsConfirming = true;
                     this.btnDeleteText = this.btnDeleteTextConfirm;
                     this.btnDeleteColor = this.btnDeleteColorConfirm;
-
-                    this.btnDeleteTimeout = setInterval(() => {
-                        console.log(this.btnDeleteProgress);
-
-                        if (this.btnDeleteProgress >= 100) {
-                            this.resetBtnDelete();
-                        }
-                        else {
-                            this.btnDeleteProgress += 10;
-                        }
-                    }, 250);
+                    this.btnDeleteTimeout = setTimeout(this.resetBtnDelete, 2500);
                 }
                 else {
                     this.delete();
@@ -198,7 +178,6 @@
                 this.btnDeleteText = this.btnDeleteTextDefault;
                 this.btnDeleteColor = this.btnDeleteColorDefault;
                 this.btnDeleteDisabled = false;
-                this.btnDeleteProgress = 0;
             },
             delete() {
                 this.btnDeleteDisabled = true;
