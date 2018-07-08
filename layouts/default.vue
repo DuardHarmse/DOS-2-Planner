@@ -22,7 +22,7 @@
                         <v-icon color="primary" dark>account_circle</v-icon>
                     </v-list-tile-avatar>
                     <v-list-tile-content class="pl-2">
-                        <v-list-tile-title>{{ item.title }}</v-list-tile-title>
+                        <v-list-tile-title>{{ item.name }}</v-list-tile-title>
                         <!-- <v-list-tile-sub-title>{{ item.subtitle }}</v-list-tile-sub-title> -->
                     </v-list-tile-content>
                     <v-list-tile-action>
@@ -102,7 +102,7 @@
             </v-btn>
         </v-fab-transition>
 
-        <v-bottom-nav :value="true" :active.sync="activeCharacter" fixed dark id="bottom-nav">
+        <v-bottom-nav :value="true" :active.sync="activeCharacter.character" fixed dark id="bottom-nav">
             <div class="bottom-nav__scroll-container">
                 <v-btn v-for="member in partyState.members" :key="member._id" flat :value="member._id" @click="switchCharacter(member)" color="primary">
                     {{ member.name }}
@@ -127,8 +127,9 @@
 
     export default {
         mounted() {
-            this.partyState = this.$ap;
-            this.activeCharacter = this.characterState._id;
+            this.parties = this.$store.parties;
+            this.partyState = this.$store.activeParty;
+            this.activeCharacter = this.$store.activeCharacter;
 
             this.attributeState = this.$attributeStore;
             this.combatAbilityState = this.$combatAbilityStore;
@@ -151,7 +152,7 @@
             Talents
         },
         data: data => ({
-            activeCharacter: '',
+            activeCharacter: {},
             activeParty: '',
             activeTab: '',
             attributeState: { unspent: 0 },
@@ -168,18 +169,18 @@
                 { _id: 2, title: 'Party #2', subtitle: 'Description of party', btnDeleteColor: '', btnDeleteDisabled: false, btnDeleteTimeout: null },
                 { _id: 3, title: 'Party #3', subtitle: 'Description of party', btnDeleteColor: '', btnDeleteDisabled: false, btnDeleteTimeout: null }
             ],
-            partyState: {},
+            parties: [],
+            partyState: {
+                members: []
+            },
             snackbar: false,
             snackbarMessage: '',
             snackbarTimeout: 2500
         }),
         computed: {
-            hideFab() {
-                return this.activeTab != 'overview';
-            },
             characterState() {
-                if (this.partyState && this.partyState.members) {
-                    return this.partyState.members[this.partyState.activeCharacter];
+                if (this.partyState && this.partyState.members && this.partyState.members.length != 0) {
+                    return this.partyState.members.find(member => member._id == this.activeCharacter.character);
                 }
                 else {
                     return {
@@ -187,6 +188,9 @@
                         level: 0
                     };
                 }
+            },
+            hideFab() {
+                return this.activeTab != 'overview';
             }
         },
         methods: {
@@ -214,18 +218,7 @@
                 this.snackbar = true;
             },
             switchCharacter(character) {
-                let index = 0;
-
-                for (let i = 0, l = this.partyState.members.length; i < l; i++) {
-                    if (this.partyState.members[i]._id == character._id) {
-                        index = i;
-                        break;
-                    }
-                }
-
-                this.activeCharacter = character._id;
-                this.partyState.activeCharacter = index;
-                // Object.assign(this.characterState, character);
+                this.activeCharacter.character = character._id;
             },
             switchParty(party) {
                 this.activeParty = party._id;
@@ -269,9 +262,26 @@
                 });
             },
             addPartyMember() {
-                this.$db.addPartyMember().then((member) => {
-                    this.$ap.members.push(member);
+                this.$db.addPartyMember().then((result) => {
+                    let members = this.partyState.members.slice();
+                    members.push({
+                        _id: result.character._id,
+                        name: result.character.name
+                    });
+
+                    Object.assign(this.partyState, result.party);
+                    this.partyState.members = members;
+
+                    this.switchCharacter(this.partyState.members[this.partyState.members.length - 1]);
                 });
+            },
+            getMemberName(member) {
+                if (this.activeCharacter == member._id) {
+                    return this.characterState.name;
+                }
+                else {
+                    return member.name;
+                }
             }
         }
     };

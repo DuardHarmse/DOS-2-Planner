@@ -45,7 +45,8 @@
 <script>
     export default {
         mounted() {
-            this.partyState = this.$ap;
+            this.partyState = this.$store.activeParty;
+            this.activeCharacter = this.$store.activeCharacter;
 
             this.$watch("level", function(newVal, oldVal) {
                 if (newVal < oldVal && this.unspent < 0) {
@@ -53,71 +54,17 @@
                 }
             });
 
-            // this.$watch("selected", function(newVal, oldVal) {
-            //     this.$ac.talents = newVal.map(item => item._id);
-
-            //     for (let i = 0, l = newVal.length; i < l; i++) {
-            //         let newTalent = newVal[i];
-            //         let exists = false;
-
-            //         for (let j = 0, m = oldVal.length; j < m; j++) {
-            //             let oldTalent = oldVal[j];
-
-            //             if (newTalent._id == oldTalent._id) {
-            //                 exists = true;
-            //                 oldVal.splice(j, 1);
-            //                 break;
-            //             }
-            //         }
-
-            //         if (!exists) {
-            //             if (newTalent.modifier && newTalent.modifier.attribute) {
-            //                 newTalent.modifier.attribute.onActivate(this);
-            //             }
-            //         }
-            //     }
-
-            //     for (let i = 0, l = oldVal.length; i < l; i++) {
-            //         let oldTalent = oldVal[i];
-
-            //         if (oldTalent.modifier && oldTalent.modifier.attribute) {
-            //             oldVal[i].modifier.attribute.onDeactivate(this);
-            //         }
-            //     }
-
-            //     this.$ee.on('resetTalents', this.resetTalents)
-
-            //     // Attributes, combat and civil abilities should be applied only when the bonuses from talents have been applied.
-            //     // this.$ee.emit('talentsApplied');
-            // });
+            this.$watch('characterState.talents', this.applyTalents);
 
             this.$db.getTalents().then((talents) => {
                 this.items = talents;
                 this.show = true;
-                // let acTalents = [];
 
-                // for (let i = 0, l = this.items.length; i < l; i++) {
-                //     let talent = this.items[i];
-
-                //     if (talent.modifier && talent.modifier.attribute) {
-                //         if (this.hasOwnProperty(talent.modifier.attribute)) {
-                //             talent.modifier.attribute = this[talent.modifier.attribute].call();
-                //         }
-                //         else {
-                //             console.warn(`Could not find attribute modifier function '${talent.modifier.attribute}'.`);
-                //         }
-                //     }
-
-                //     if (this.$ac.talents.indexOf(talent._id) != -1) {
-                //         acTalents.push(talent);
-                //     }
-                // }
-
-                // // Set all at once to prevent the $watch on data.selected to trigger with `newVal` and `oldVal` having the same value.
-                // this.selected = acTalents;
+                this.applyTalents(this.characterState.talents, []);
             });
         },
         data: () => ({
+            activeCharacter: {},
             bonus: 0,
             headers: [
                 {
@@ -141,8 +88,8 @@
         }),
         computed: {
             characterState() {
-                if (this.partyState && this.partyState.members) {
-                    return this.partyState.members[this.partyState.activeCharacter];
+                if (this.partyState && this.partyState.members && this.partyState.members.length != 0) {
+                    return this.partyState.members.find(member => member._id == this.activeCharacter.character);
                 }
                 else {
                     return {
@@ -196,14 +143,17 @@
                 this.characterState.talents = [];
             },
             changeTalent(props) {
-                let index = this.characterState.talents.indexOf(props.item._id);
+                let talents = this.characterState.talents.slice();
+                let index = talents.indexOf(props.item._id);
 
                 if (index != -1) {
-                    this.characterState.talents.splice(index, 1);
+                    talents.splice(index, 1);
                 }
                 else if (this.unspent > 0) {
-                    this.characterState.talents.push(props.item._id);
+                    talents.push(props.item._id);
                 }
+
+                this.characterState.talents = talents;
             },
             toggleAllTalents(props) {
                 if (this.selected.length) this.characterState.talents = [];
@@ -215,6 +165,38 @@
                 } else {
                     this.pagination.sortBy = column;
                     this.pagination.descending = false;
+                }
+            },
+            applyTalents(newVal, oldVal) {
+                let diffNew = newVal.filter(i => oldVal.indexOf(i) < 0),
+                    diffOld = oldVal.filter(i => newVal.indexOf(i) < 0);
+
+                // Activate all talents in diffNew.
+                if (diffNew && diffNew.length != 0) {
+                    for (let diff of diffNew) {
+                        let talent = this.items.find(i => i._id == diff);
+                        
+                        if (talent && talent.modifier && talent.modifier.attribute) {
+                            if (this[talent.modifier.attribute]) {
+                                console.log(`Activating talent ${talent.name}`, talent);
+                                this[talent.modifier.attribute](this).onActivate(this);
+                            }
+                        }
+                    }
+                }
+
+                // Deactivate all talents in diffOld.
+                if (diffOld && diffOld.length != 0) {
+                    for (let diff of diffOld) {
+                        let talent = this.items.find(i => i._id == diff);
+                        
+                        if (talent && talent.modifier && talent.modifier.attribute) {
+                            if (this[talent.modifier.attribute]) {
+                                console.log(`Deactivating talent ${talent.name}`, talent);
+                                this[talent.modifier.attribute](this).onDeactivate(this);
+                            }
+                        }
+                    }
                 }
             },
 
@@ -267,18 +249,14 @@
                     if (!self.hasActivated) {
                         self.hasActivated = true;
                         vue.$ee.emit("incAttrValue", 1);
-                        vue.$ee.emit("resetAttributes");
                         vue.$ee.emit("incCmbtValue", 1);
-                        vue.$ee.emit("resetCmbtAbilities");
                     }
                 }
 
                 function onDeactivate(vue) {
                     self.hasActivated = false;
                     vue.$ee.emit("incAttrValue", -1);
-                    vue.$ee.emit("resetAttributes");
                     vue.$ee.emit("incCmbtValue", -1);
-                    vue.$ee.emit("resetCmbtAbilities");
                 }
             },
 
@@ -288,18 +266,17 @@
                     onDeactivate: onDeactivate,
                     hasActivated: false
                 };
-                let attrBaseibutes = null;
 
                 return self;
 
                 function onActivate(vue) {
-                    vue.$ee.emit("incAttrBonus", 2);
                     self.hasActivated = true;
+                    vue.$ee.emit("incAttrBonus", 2);
                 }
 
                 function onDeactivate(vue) {
-                    vue.$ee.emit("incAttrBonus", -2);
                     self.hasActivated = false;
+                    vue.$ee.emit("incAttrBonus", -2);
                     vue.$ee.emit("resetAttributes");
                 }
             }

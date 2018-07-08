@@ -42,7 +42,9 @@
 <script>
     export default {
         mounted() {
-            this.partyState = this.$ap;
+            this.partyState = this.$store.activeParty;
+            this.activeCharacter = this.$store.activeCharacter;
+
             this.btnDeleteText = this.btnDeleteTextDefault;
             this.btnDeleteColor = this.btnDeleteColorDefault;
 
@@ -75,6 +77,7 @@
             });
         },
         data: data => ({
+            activeCharacter: {},
             btnDeleteColor: 'accent',
             btnDeleteDisabled: false,
             btnDeleteColorConfirm: 'red',
@@ -91,13 +94,13 @@
         }),
         computed: {
             characterState() {
-                if (this.partyState && this.partyState.members) {
-                    return this.partyState.members[this.partyState.activeCharacter];
+                if (this.partyState && this.partyState.members && this.partyState.members.length != 0) {
+                    return this.partyState.members.find(member => member._id == this.activeCharacter.character);
                 }
                 else {
                     return {
                         name: '',
-                        level: 1,
+                        level: 0,
                         origin: '',
                         race: ''
                     };
@@ -153,6 +156,7 @@
 
                     console.log(`Active character updated to revision '${result.rev}'.`);
                     this.characterState._rev = result.rev;
+                    this.partyState.members.find(member => member._id == this.characterState._id).name = this.characterState.name;
                 });
             },
             confirmDelete() {
@@ -177,9 +181,9 @@
             delete() {
                 this.btnDeleteDisabled = true;
 
-                if (this.$ap.members.length > 1) {
-                    this.$db.deleteCharacter(this.$ac, this.$ap).then((party) => {
-                        this.partyState = party;
+                if (this.partyState.members.length > 1) {
+                    this.$db.deleteCharacter(this.characterState, this.partyState).then((party) => {
+                        Object.assign(this.partyState, party);
 
                         this.$ee.emit('switchCharacter', this.partyState.members[0]);
                         this.resetBtnDelete();
@@ -188,7 +192,7 @@
                 }
                 else {
                     this.$db.resetCharacter(this.$ac).then((character) => {
-                        this.$ee.emit('switchCharacter', character);
+                        // this.$ee.emit('switchCharacter', character);
                         this.resetBtnDelete();
                         this.$ee.emit('toast', 'Character reset to default');
                     });

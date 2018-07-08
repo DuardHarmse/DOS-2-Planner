@@ -33,7 +33,8 @@
 <script>
     export default {
         mounted() {
-            this.partyState = this.$ap;
+            this.partyState = this.$store.activeParty;
+            this.activeCharacter = this.$store.activeCharacter;
 
             this.$watch("level", function(newVal, oldVal) {
                 if (newVal < oldVal) {
@@ -44,11 +45,9 @@
             this.$ee.on('resetAttributes', this.resetAttributes);
             this.$ee.on('incAttrValue', this.incValue);
             this.$ee.on('incAttrBonus', this.incBonus);
-            // this.$ee.once('talentsApplied', () => {
-            //     this.items = this.$ac.attributes;
-            // });
         },
         data: data => ({
+            activeCharacter: {},
             bonus: 0,
             headers: [
                 {
@@ -62,16 +61,17 @@
                 }
             ],
             partyState: {},
-            value: 1,
+            value: 1
         }),
         computed: {
             characterState() {
-                if (this.partyState && this.partyState.members) {
-                    return this.partyState.members[this.partyState.activeCharacter];
+                if (this.partyState && this.partyState.members && this.partyState.members.length != 0) {
+                    return this.partyState.members.find(member => member._id == this.activeCharacter.character);
                 }
                 else {
                     return {
-                        attributes: []
+                        attributes: [],
+                        talents: []
                     };
                 }
             },
@@ -136,7 +136,19 @@
                 }
             },
             incValue(inc) {
+                if (inc < 0) {
+                    for (let attribute of this.characterState.attributes) {
+                        attribute.points = ((attribute.points - 10) / this.value) + 10;
+                    }
+                }
+
                 this.value += inc;
+
+                if (this.value > 0) {
+                    for (let attribute of this.characterState.attributes) {
+                        attribute.points = ((attribute.points - 10) * this.value) + 10;
+                    }
+                }
             },
             incBonus(inc) {
                 this.bonus += inc;

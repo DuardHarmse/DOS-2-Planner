@@ -44,7 +44,8 @@
 <script>
     export default {
         mounted() {
-            this.partyState = this.$ap;
+            this.partyState = this.$store.activeParty;
+            this.activeCharacter = this.$store.activeCharacter;
 
             this.$watch("level", function(newVal, oldVal) {
                 if (newVal < oldVal) {
@@ -61,6 +62,7 @@
             });
         },
         data: () => ({
+            activeCharacter: {},
             bonus: 0,
             headers: [
                 {
@@ -84,12 +86,13 @@
         }),
         computed: {
             characterState() {
-                if (this.partyState && this.partyState.members) {
-                    return this.partyState.members[this.partyState.activeCharacter];
+                if (this.partyState && this.partyState.members && this.partyState.members.length != 0) {
+                    return this.partyState.members.find(member => member._id == this.activeCharacter.character);
                 }
                 else {
                     return {
-                        combatAbilities: {}
+                        combatAbilities: {},
+                        talents: []
                     };
                 }
             },
@@ -150,7 +153,27 @@
                 }
             },
             incValue(inc) {
+                if (inc < 0) {
+                    for (let combatAbility in this.characterState.combatAbilities) {
+                        if (this.characterState.combatAbilities.hasOwnProperty(combatAbility)) {
+                            let points = this.characterState.combatAbilities[combatAbility];
+
+                            this.characterState.combatAbilities[combatAbility] = points / this.value;
+                        }
+                    }
+                }
+
                 this.value += inc;
+
+                if (this.value > 0) {
+                    for (let combatAbility in this.characterState.combatAbilities) {
+                        if (this.characterState.combatAbilities.hasOwnProperty(combatAbility)) {
+                            let points = this.characterState.combatAbilities[combatAbility];
+
+                            this.characterState.combatAbilities[combatAbility] = points * this.value;
+                        }
+                    }
+                }
             },
             incBonus(inc) {
                 this.bonus += inc;

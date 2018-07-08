@@ -37,12 +37,12 @@ function ConcurrentAsyncTask() {
     var self = this;
     self._tasks = arguments || [];
 
-    self.addTasks = function() {
+    self.addTasks = function () {
         self._tasks.concat(arguments);
         return self;
     };
 
-    self.execute = function() {
+    self.execute = function () {
         return new Promise((resolve, reject) => {
             const numTasks = self._tasks.length;
             let taskCompletionCounter = 0;
@@ -127,6 +127,7 @@ export async function initDb() {
         let parties = [
             {
                 _id: uuidv1(),
+                name: 'Party #1',
                 members: [characters[0]._id]
             }
         ];
@@ -160,6 +161,21 @@ export async function getOrigins() {
     return await getAll('origins');
 }
 
+export async function getParties() {
+    let parties = (await getAll('parties'));
+
+    parties = parties
+        .filter(party => party._id != 'active')
+        .map((party) => {
+            return {
+                _id: party._id,
+                name: party.name
+            };
+        });
+
+    return parties;
+}
+
 export async function getActiveParty() {
     let dbParties = new PouchDB('parties');
 
@@ -173,43 +189,76 @@ export async function getActiveParty() {
         keys: activeParty.members
     })).rows.map((member) => member.doc);
 
+    for (let member of members) {
+        populateCharacterDetails(member);
+    }
+
+    activeParty.members = members
+
+    return activeParty;
+}
+
+export async function getActiveCharacter() {
+    let dbCharacters = new PouchDB('characters');
+
+    let activeCharacterIndicator = await dbCharacters.get('active');
+    // let activeCharacter = await dbCharacters.get(activeCharacterIndicator.character);
+
+    // populateCharacterDetails(activeCharacter);
+
+    return activeCharacterIndicator;
+}
+
+async function populateCharacterDetails(character) {
     // Include combat abilities.
     let allCombatAbilities = await getAll('combat-abilities');
 
     // Include civil abilities.
     let allCivilAbilities = await getAll('civil-abilities');
 
-    // Update properties for each member.
-    for (let i = 0, l = members.length; i < l; i++) {
-        let member = members[i];
-        let combatAbilities = {};
-        let civilAbilities = {};
-    
-        for (let j = 0, m = allCombatAbilities.length; j < m; j++) {
-            combatAbilities[allCombatAbilities[j]._id] = 0;
-        }
-    
-        for (let j = 0, m = allCivilAbilities.length; j < m; j++) {
-            civilAbilities[allCivilAbilities[j]._id] = 0;
-        }
+    let combatAbilities = {};
+    let civilAbilities = {};
 
-        member.combatAbilities = Object.assign(combatAbilities, member.combatAbilities);
-        member.civilAbilities = Object.assign(civilAbilities, member.civilAbilities);
+    for (let i = 0, l = allCombatAbilities.length; i < l; i++) {
+        combatAbilities[allCombatAbilities[i]._id] = 0;
     }
 
-    activeParty.members = members;
+    for (let i = 0, l = allCivilAbilities.length; i < l; i++) {
+        civilAbilities[allCivilAbilities[i]._id] = 0;
+    }
 
+    character.combatAbilities = Object.assign(combatAbilities, character.combatAbilities);
+    character.civilAbilities = Object.assign(civilAbilities, character.civilAbilities);
 
-    return activeParty;
+    return character;
+}
+
+export async function switchActiveCharacter(newActiveCharacterId) {
+    let dbCharacters = new PouchDB('characters');
+    let newActiveCharacter = await dbCharacters.get(newActiveCharacterId);
+
+    if (newActiveCharacter) {
+        let activeCharacterIndicator = await dbCharacters.get('active');
+        
+        activeCharacterIndicator.character = newActiveCharacter._id;
+        await dbCharacters.put(activeCharacterIndicator);
+
+        populateCharacterDetails(newActiveCharacter);
+
+        return newActiveCharacter;
+    }
+    else {
+        throw(`Could not find character in database with ID = ${newActiveCharacterId}`);
+    }
 }
 
 export async function addPartyMember() {
-    var dbParties = new PouchDB('parties');
-    var activePartyIndicator = await dbParties.get('active');
-    var activeParty = await dbParties.get(activePartyIndicator.party);
+    let dbParties = new PouchDB('parties');
+    let activePartyIndicator = await dbParties.get('active');
+    let activeParty = await dbParties.get(activePartyIndicator.party);
 
-    var dbCharacters = new PouchDB('characters');
-    var result = await dbCharacters.put({
+    let dbCharacters = new PouchDB('characters');
+    let characterPutResult = await dbCharacters.put({
         _id: uuidv1(),
         name: `Character #${activeParty.members.length + 1}`,
         origin: 'custom',
@@ -221,10 +270,13 @@ export async function addPartyMember() {
         talents: []
     });
 
-    activeParty.members.push(result.id);
-    await dbParties.put(activeParty);
+    activeParty.members.push(characterPutResult.id);
+    let partyPutResult = await dbParties.put(activeParty);
 
-    return await dbCharacters.get(result.id);
+    return {
+        character: await dbCharacters.get(characterPutResult.id),
+        party: await dbParties.get(partyPutResult.id)
+    };
 }
 
 export async function updateCharacter(character) {
@@ -280,23 +332,32 @@ export async function resetCharacter(character) {
 }
 
 export async function deleteCharacter(character, party) {
-    let dbCharacters = new PouchDB('characters');
-    let dbParties = new PouchDB('parties');
-
-    // Remove deleted character from the party's member array.
-    party.members.splice(party.members.indexOf(character._id), 1);
-
-    let members = party.members;
-    party.members = party.members.map(member => member._id);
+    try {
+        let dbCharacters = new PouchDB('characters');
+        let dbParties = new PouchDB('parties');
     
-    await dbCharacters.remove(character);    
-
-    let result = await dbParties.put(party);
-    party = await dbParties.get(result.id);
-
-    party.members = members;
-
-    return party;
+        // Remove deleted character from the party's member array.
+        party.members = party.members.filter(member => member._id != character._id);
+        let members = party.members.slice();
+        party.members = members.map(member => member._id);
+    
+        await dbCharacters.remove(character);
+        
+        // Update the active character.
+        let activeCharacterIndicator = await dbCharacters.get('active');
+        activeCharacterIndicator.character = party.members[0];
+        await dbCharacters.put(activeCharacterIndicator);
+    
+        let result = await dbParties.put(party);
+        party = await dbParties.get(result.id);
+    
+        party.members = members;
+    
+        return party;
+    }
+    catch (err) {
+        console.error(err);
+    }
 }
 
 export async function getCombatAbilities() {
