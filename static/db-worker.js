@@ -213,7 +213,7 @@ export async function getParty(party) {
     })).rows.map((member) => member.doc);
 
     for (let member of members) {
-        populateCharacterDetails(member);
+        await populateCharacterDetails(member);
     }
 
     activeParty.members = members
