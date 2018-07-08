@@ -7,6 +7,16 @@ var MiniPouchDB = PouchDB.defaults({
     auto_compaction: true
 });
 
+const dbs = {
+    races: () => new MiniPouchDB('races'),
+    origins: () => new MiniPouchDB('origins'),
+    characters: () => new MiniPouchDB('characters'),
+    parties: () => new MiniPouchDB('parties'),
+    combatAbilities: () => new MiniPouchDB('combat-abilities'),
+    civilAbilities: () => new MiniPouchDB('civil-abilities'),
+    talents: () => new MiniPouchDB('talents')
+};
+
 async function dbExists(dbNames, destroyIfNotExists) {
     let existsAll = true;
 
@@ -65,8 +75,16 @@ function ConcurrentAsyncTask() {
 }
 
 async function getAll(dbName) {
-    var db = new PouchDB(dbName);
-    var result = await db.allDocs({ include_docs: true });
+    let db = null;
+
+    if (typeof (dbName) == 'string') {
+        db = new PouchDB(dbName);
+    }
+    else {
+        db = dbName;
+    }
+
+    let result = await db.allDocs({ include_docs: true });
 
     let docs = [];
 
@@ -97,14 +115,14 @@ export async function initDb() {
             civilAbilities = (await axios.get('/json/civil-abilities.json')).data,
             talents = (await axios.get('/json/talents.json')).data;
 
-        let dbRaces = new MiniPouchDB('races'),
-            dbOrigins = new MiniPouchDB('origins'),
-            dbCharacters = new MiniPouchDB('characters'),
-            dbParties = new MiniPouchDB('parties'),
+        let dbRaces = dbs.races(),
+            dbOrigins = dbs.origins(),
+            dbCharacters = dbs.characters(),
+            dbParties = dbs.parties(),
 
-            dbCombatAbilities = new MiniPouchDB('combat-abilities'),
-            dbCivilAbilities = new MiniPouchDB('civil-abilities'),
-            dbTalents = new MiniPouchDB('talents');
+            dbCombatAbilities = dbs.combatAbilities(),
+            dbCivilAbilities = dbs.civilAbilities(),
+            dbTalents = dbs.talents();
 
         let characters = [
             {
@@ -239,7 +257,7 @@ export async function switchActiveCharacter(newActiveCharacterId) {
 
     if (newActiveCharacter) {
         let activeCharacterIndicator = await dbCharacters.get('active');
-        
+
         activeCharacterIndicator.character = newActiveCharacter._id;
         await dbCharacters.put(activeCharacterIndicator);
 
@@ -248,19 +266,29 @@ export async function switchActiveCharacter(newActiveCharacterId) {
         return newActiveCharacter;
     }
     else {
-        throw(`Could not find character in database with ID = ${newActiveCharacterId}`);
+        throw (`Could not find character in database with ID = ${newActiveCharacterId}`);
     }
 }
 
-export async function addPartyMember() {
+export async function addPartyMember(party) {
     let dbParties = new PouchDB('parties');
-    let activePartyIndicator = await dbParties.get('active');
-    let activeParty = await dbParties.get(activePartyIndicator.party);
+    let activeParty = await dbParties.get(party._id);
+    let character = await addCharacter(`Character #${activeParty.members.length + 1}`);
 
+    activeParty.members.push(character._id);
+    let partyPutResult = await dbParties.put(activeParty);
+
+    return {
+        character,
+        party: await dbParties.get(partyPutResult.id)
+    };
+}
+
+async function addCharacter(name) {
     let dbCharacters = new PouchDB('characters');
     let characterPutResult = await dbCharacters.put({
         _id: uuidv1(),
-        name: `Character #${activeParty.members.length + 1}`,
+        name,
         origin: 'custom',
         race: 'dwarf',
         level: 1,
@@ -269,14 +297,9 @@ export async function addPartyMember() {
         civilAbilities: {},
         talents: []
     });
+    let character = await dbCharacters.get(characterPutResult.id);
 
-    activeParty.members.push(characterPutResult.id);
-    let partyPutResult = await dbParties.put(activeParty);
-
-    return {
-        character: await dbCharacters.get(characterPutResult.id),
-        party: await dbParties.get(partyPutResult.id)
-    };
+    return character
 }
 
 export async function updateCharacter(character) {
@@ -335,24 +358,24 @@ export async function deleteCharacter(character, party) {
     try {
         let dbCharacters = new PouchDB('characters');
         let dbParties = new PouchDB('parties');
-    
+
         // Remove deleted character from the party's member array.
         party.members = party.members.filter(member => member._id != character._id);
         let members = party.members.slice();
         party.members = members.map(member => member._id);
-    
+
         await dbCharacters.remove(character);
-        
+
         // Update the active character.
         let activeCharacterIndicator = await dbCharacters.get('active');
         activeCharacterIndicator.character = party.members[0];
         await dbCharacters.put(activeCharacterIndicator);
-    
+
         let result = await dbParties.put(party);
         party = await dbParties.get(result.id);
-    
+
         party.members = members;
-    
+
         return party;
     }
     catch (err) {
@@ -372,8 +395,45 @@ export async function getTalents() {
     return await getAll('talents');
 }
 
-export function deleteParty() {
-    return new Promise((resolve) => {
-        setTimeout(resolve, 1000);
+export async function addParty() {
+    let dbParties = new PouchDB('parties');
+    let numParties = (await getAll(dbParties)).filter(party => party._id != 'active').length;
+    let character = await addCharacter('Character #1');
+
+    let partyPutResult = await dbParties.put({
+        _id: uuidv1(),
+        name: `Party #${numParties + 1}`,
+        members: [character._id]
     });
+    let party = await dbParties.get(partyPutResult.id);
+
+    return { party };
+}
+
+export async function deleteParty(party) {
+    try {
+        let dbParties = dbs.parties();
+
+        if (typeof(party) == 'string') {
+            party = await dbParties.get(party);
+        }
+        else if (party._id && !party.hasOwnProperty('_rev')) {
+            party = await dbParties.get(party._id);
+        }
+
+        await dbParties.remove(party);
+
+        // Update the active party.
+
+        let parties = await getAll(dbParties);
+        let activePartyIndicator = await dbParties.get('active');
+
+        activePartyIndicator.party = parties[0]._id;
+        await dbParties.put(activePartyIndicator);
+    }
+    catch (err) {
+        console.error(err);
+
+        return null;
+    }
 }

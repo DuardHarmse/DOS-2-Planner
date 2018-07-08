@@ -13,20 +13,19 @@
                 <v-subheader inset class="pr-0 ml-0">
                     <span>Party Management</span>
                     <v-spacer></v-spacer>
-                    <v-btn flat icon color="primary" dark>
+                    <v-btn @click="addParty()" flat icon color="primary" dark>
                         <v-icon>add</v-icon>
                     </v-btn>
                 </v-subheader>
-                <v-list-tile v-for="item in parties" :key="item.title" avatar @click="switchParty(item)" :class="checkParty(item)">
+                <v-list-tile v-for="item in parties" :key="item._id" avatar @click.stop="switchParty(item)">
                     <v-list-tile-avatar>
-                        <v-icon color="primary" dark>account_circle</v-icon>
+                        <v-icon color="accent" dark>account_circle</v-icon>
                     </v-list-tile-avatar>
                     <v-list-tile-content class="pl-2">
                         <v-list-tile-title>{{ item.name }}</v-list-tile-title>
-                        <!-- <v-list-tile-sub-title>{{ item.subtitle }}</v-list-tile-sub-title> -->
                     </v-list-tile-content>
                     <v-list-tile-action>
-                        <v-btn icon ripple @click.stop="confirmDeleteParty(item)" :disabled="item.isDeleting">
+                        <v-btn icon ripple @click.stop="confirmDeleteParty(item)" :disabled="item.btnDleteDisabled">
                             <v-icon :color="item.btnDeleteColor">delete</v-icon>
                         </v-btn>
                     </v-list-tile-action>
@@ -127,18 +126,19 @@
 
     export default {
         mounted() {
-            this.parties = this.$store.parties;
+            this.parties = this.$store.parties.map(party => Object.assign(party, {
+                btnDeleteColor: this.btnDeleteColorDefault,
+                btnDeleteDisabled: false
+            }));
             this.partyState = this.$store.activeParty;
             this.activeCharacter = this.$store.activeCharacter;
+
+            this.activeParty = this.parties[0]._id;
 
             this.attributeState = this.$attributeStore;
             this.combatAbilityState = this.$combatAbilityStore;
             this.civilAbilityState = this.$civilAbilityStore;
             this.talentState = this.$talentStore;
-
-            for (let party of this.parties) {
-                party.btnDeleteColor = this.btnDeleteColorDefault;
-            }
 
             this.$ee.on('disableName', this.disableName);
             this.$ee.on('toast', this.toast);
@@ -164,11 +164,6 @@
             dialog: false,
             drawer: null,
             nameDisabled: false,
-            parties: [
-                { _id: 1, title: 'Party #1', subtitle: 'Description of party', btnDeleteColor: '', btnDeleteDisabled: false, btnDeleteTimeout: null },
-                { _id: 2, title: 'Party #2', subtitle: 'Description of party', btnDeleteColor: '', btnDeleteDisabled: false, btnDeleteTimeout: null },
-                { _id: 3, title: 'Party #3', subtitle: 'Description of party', btnDeleteColor: '', btnDeleteDisabled: false, btnDeleteTimeout: null }
-            ],
             parties: [],
             partyState: {
                 members: []
@@ -243,23 +238,9 @@
                 if (party) {
                     clearTimeout(party.btnDeleteTimeout);
                     delete party.isDeleting;
+                    party.btnDeleteDisabled = false;
                     party.btnDeleteColor = this.btnDeleteColorDefault;
                 }
-            },
-            deleteParty(party) {
-                this.$db.deleteParty(party).then(() => {
-                    for (let i = 0, l = this.parties.length; i < l; i++) {
-                        let iParty = this.parties[i];
-
-                        if (iParty._id == party._id) {
-                            this.parties.splice(i, 1);
-                            break;
-                        }
-                    }
-
-                    this.resetBtnDelete();
-                    this.$ee.emit('toast', 'Party deleted');
-                });
             },
             addPartyMember() {
                 this.$db.addPartyMember().then((result) => {
@@ -282,6 +263,27 @@
                 else {
                     return member.name;
                 }
+            },
+            addParty() {
+                this.$db.addParty().then((result) => {
+                    this.parties.push({
+                        _id: result.party._id,
+                        name: result.party.name,
+                        btnDeleteColor: this.btnDeleteColorDefault,
+                    });
+                }).catch((err) => {
+                    console.error(err);
+                });
+            },
+            deleteParty(party) {
+                party.btnDeleteDisabled = true;
+
+                this.$db.deleteParty(party).then(() => {
+                    this.parties = this.parties.filter(p => p._id != party._id);
+
+                    this.resetBtnDelete();
+                    this.$ee.emit('toast', 'Party deleted');
+                });
             }
         }
     };
