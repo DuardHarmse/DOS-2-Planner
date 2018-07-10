@@ -1,7 +1,7 @@
-import Vue from 'vue'
+import Vue from 'vue';
 import worker from 'workerize-loader!~/static/db-worker.js';
 
-Vue.use(worker)
+Vue.use(worker);
 
 export default async ({ app }, inject) => {
     // Set `worker` instance on `app`
@@ -10,5 +10,6 @@ export default async ({ app }, inject) => {
 
     await dbWorker.initDb();
     app.db = dbWorker;
+    
     inject('db', dbWorker);
 }

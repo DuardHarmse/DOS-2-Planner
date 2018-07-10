@@ -4,6 +4,10 @@
 
 <script>
     export default {
+        asyncData (context) {
+            debugger;
+            return { project: 'nuxt' };
+        },
         data: data => ({
             test: true
         })

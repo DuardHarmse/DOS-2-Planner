@@ -99,6 +99,12 @@ export function ping() {
     return 'pong';
 }
 
+function wait(milliseconds) {
+    return new Promise((resolve) => {
+        setTimeout(resolve, milliseconds);
+    });
+}
+
 export async function initDb() {
     try {
         if (await dbExists(['races', 'origins', 'characters', 'parties', 'combat-abilities', 'civil-abilities', 'talents'], true)) {
@@ -154,7 +160,7 @@ export async function initDb() {
             party: parties[0]._id
         });
 
-        return (await new ConcurrentAsyncTask(
+        await new ConcurrentAsyncTask(
             dbRaces.bulkDocs(races),
             dbOrigins.bulkDocs(origins),
             dbCharacters.bulkDocs(characters),
@@ -162,7 +168,7 @@ export async function initDb() {
             dbCombatAbilities.bulkDocs(combatAbilities),
             dbCivilAbilities.bulkDocs(civilAbilities),
             dbTalents.bulkDocs(talents)
-        ).execute());
+        ).execute();
     }
     catch (err) {
         console.error(err);

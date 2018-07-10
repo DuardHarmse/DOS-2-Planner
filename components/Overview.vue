@@ -1,5 +1,5 @@
 <template>
-    <v-layout id="attributes" class="pa-3">
+    <v-layout id="overview" class="pa-3">
         <v-flex xl6 offset-xl3 lg8 offset-lg2 md10 offset-md1>
             <v-card>
                 <v-card-title primary-title>
@@ -69,7 +69,6 @@
 
 
                 this.origins = origins;
-
             });
 
             this.$db.getRaces().then((races) => {

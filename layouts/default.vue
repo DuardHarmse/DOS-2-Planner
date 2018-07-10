@@ -1,119 +1,212 @@
+<style>
+    .loading-glare::before {
+        content: " ";
+        position: absolute;
+        top: 0;
+        right: 0;
+        bottom: 0;
+        left: 50%;
+        z-index: 5;
+        width: 500%;
+        margin-left: -250%;
+        animation: phAnimation .8s linear infinite;
+        background: linear-gradient(to right, transparent 46%, rgba(255, 255, 255, 0.35) 50%, transparent 54%) 50% 50%;
+    }
+
+    @keyframes phAnimation {
+        0% {
+            transform: translate3d(-30%, 0, 0);
+        }
+        100% {
+            transform: translate3d(30%, 0, 0);
+        }
+    }
+</style>
 <template>
-    <v-app>
-        <v-navigation-drawer v-model="drawer" temporary fixed>
-            <v-toolbar flat>
-                <v-list>
-                    <v-list-tile>
-                        <v-list-tile-title class="title">DOS 2 Planner</v-list-tile-title>
+    <v-app :class="{ 'loading-glare': isLoading }">
+        <v-slide-x-transition>
+        <div v-show="isLoading">
+            
+            <v-toolbar color="grey lighten-2" height="64"></v-toolbar>
+            <v-layout id="overview" class="pa-3">
+                <v-flex xl6 offset-xl3 md4 offset-md4 sm6 offset-sm3>
+                    <v-card color="grey lighten-2">
+                        <v-card-title primary-title>
+                            <v-avatar size="48" color="grey"></v-avatar>
+                        </v-card-title>
+                        <v-card-text>
+                            <v-container grid-list-md text-xs-center>
+                                <v-layout row wrap>
+                                    <v-flex xs12>
+                                        <v-card dark color="grey">
+                                            <v-card-text class="px-0"></v-card-text>
+                                        </v-card>
+                                    </v-flex>
+                                </v-layout>
+                                <v-layout row wrap>
+                                    <v-flex xs12>
+                                        <v-card dark color="grey darken-1">
+                                            <v-card-text class="px-0"></v-card-text>
+                                        </v-card>
+                                    </v-flex>
+                                </v-layout>
+                                <v-layout row wrap>
+                                    <v-flex xs6>
+                                        <v-card dark color="grey">
+                                            <v-card-text class="px-0"></v-card-text>
+                                        </v-card>
+                                    </v-flex>
+                                </v-layout>
+                                <v-layout row wrap>
+                                    <v-flex xs8 class="mb-3">
+                                        <v-card dark color="grey">
+                                            <v-card-text class="px-0"></v-card-text>
+                                        </v-card>
+                                    </v-flex>
+                                </v-layout>
+                                <v-layout row wrap>
+                                    <v-flex xs12 text-xs-left>
+                                        <v-btn color="grey darken-1" class="grey--text text--darken-1">Button</v-btn>
+                                    </v-flex>
+                                </v-layout>
+                            </v-container>
+                        </v-card-text>
+                    </v-card>
+                </v-flex>
+            </v-layout>
+            <v-bottom-nav color="grey lighten-2" :value="true" fixed dark id="bottom-nav">
+                <div class="bottom-nav__scroll-container">
+                    <v-btn flat>
+                        &nbsp;
+                        <v-icon>timer</v-icon>
+                    </v-btn>
+                </div>
+            </v-bottom-nav>
+        
+        </div>
+        </v-slide-x-transition>
+
+        <v-slide-x-reverse-transition>
+        <div v-show="showMainContent">
+
+            <v-navigation-drawer v-model="drawer" temporary fixed>
+                <v-toolbar flat>
+                    <v-list>
+                        <v-list-tile>
+                            <v-list-tile-title class="title">DOS 2 Planner</v-list-tile-title>
+                        </v-list-tile>
+                    </v-list>
+                </v-toolbar>
+                <v-divider></v-divider>
+                <v-list two-line subheader>
+                    <v-subheader inset class="pr-0 ml-0">
+                        <span>Party Management</span>
+                        <v-spacer></v-spacer>
+                        <v-btn @click="addParty()" flat icon color="primary" dark>
+                            <v-icon>add</v-icon>
+                        </v-btn>
+                    </v-subheader>
+                    <v-list-tile v-for="item in parties" :key="item._id" avatar @click.stop="switchParty(item)">
+                        <v-list-tile-avatar>
+                            <v-icon color="accent" dark>account_circle</v-icon>
+                        </v-list-tile-avatar>
+                        <v-list-tile-content class="pl-2">
+                            <v-list-tile-title>{{ item.name }}</v-list-tile-title>
+                        </v-list-tile-content>
+                        <v-list-tile-action v-if="parties.length > 1">
+                            <v-btn icon ripple @click.stop="confirmDeleteParty(item)" :disabled="item.btnDleteDisabled">
+                                <v-icon :color="item.btnDeleteColor">delete</v-icon>
+                            </v-btn>
+                        </v-list-tile-action>
                     </v-list-tile>
                 </v-list>
-            </v-toolbar>
-            <v-divider></v-divider>
-            <v-list two-line subheader>
-                <v-subheader inset class="pr-0 ml-0">
-                    <span>Party Management</span>
-                    <v-spacer></v-spacer>
-                    <v-btn @click="addParty()" flat icon color="primary" dark>
-                        <v-icon>add</v-icon>
-                    </v-btn>
-                </v-subheader>
-                <v-list-tile v-for="item in parties" :key="item._id" avatar @click.stop="switchParty(item)">
-                    <v-list-tile-avatar>
-                        <v-icon color="accent" dark>account_circle</v-icon>
-                    </v-list-tile-avatar>
-                    <v-list-tile-content class="pl-2">
-                        <v-list-tile-title>{{ item.name }}</v-list-tile-title>
-                    </v-list-tile-content>
-                    <v-list-tile-action v-if="parties.length > 1">
-                        <v-btn icon ripple @click.stop="confirmDeleteParty(item)" :disabled="item.btnDleteDisabled">
-                            <v-icon :color="item.btnDeleteColor">delete</v-icon>
-                        </v-btn>
-                    </v-list-tile-action>
-                </v-list-tile>
-            </v-list>
-            <v-divider></v-divider>
-            <v-list dense>
-                <v-list-tile @click="() => {}" ripple :disabled="true">
-                    <v-list-tile-action>
-                        <v-icon>settings</v-icon>
-                    </v-list-tile-action>
-                    <v-list-tile-content>
-                        <v-list-tile-title>Settings</v-list-tile-title>
-                    </v-list-tile-content>
-                </v-list-tile>
-            </v-list>
-        </v-navigation-drawer>
+                <v-divider></v-divider>
+                <v-list dense>
+                    <v-list-tile @click="() => {}" ripple :disabled="true">
+                        <v-list-tile-action>
+                            <v-icon>settings</v-icon>
+                        </v-list-tile-action>
+                        <v-list-tile-content>
+                            <v-list-tile-title>Settings</v-list-tile-title>
+                        </v-list-tile-content>
+                    </v-list-tile>
+                </v-list>
+            </v-navigation-drawer>
 
-        <v-toolbar color="primary" class="elevation-4 mb-3" dark tabs>
-            <v-toolbar-side-icon @click.stop="toggleDrawer"></v-toolbar-side-icon>
-            <v-toolbar-title>
-                <input v-model="characterState.name" class="inline-input" :disabled="nameDisabled" style="width: 360px;">
-            </v-toolbar-title>
-            <v-spacer></v-spacer>
-            <v-btn icon @click="decLevel()">
-                <v-icon>remove</v-icon>
-            </v-btn>
-            <input v-model.number.lazy="characterState.level" @change="changeLevel()" class="text-xs-center inline-input">
-            <v-btn icon @click="incLevel()">
-                <v-icon>add</v-icon>
-            </v-btn>
-            <v-tabs v-model="activeTab" slot="extension" centered color="primary">
-                <v-tab href="#overview" ripple>Overview</v-tab>
-                <v-tab href="#attributes" ripple>
-                    Attributes
-                    <v-subheader class="pl-2 pr-0">{{ attributeState.unspent }}</v-subheader>
-                </v-tab>
-                <v-tab href="#combat" ripple>
-                    Combat
-                    <v-subheader class="pl-2 pr-0">{{ combatAbilityState.unspent }}</v-subheader>
-                </v-tab>
-                <v-tab href="#civil" ripple>
-                    Civil
-                    <v-subheader class="pl-2 pr-0">{{ civilAbilityState.unspent }}</v-subheader>
-                </v-tab>
-                <v-tab href="#talents" ripple>
-                    Talents
-                    <v-subheader class="pl-2 pr-0">{{ talentState.unspent }}</v-subheader>
-                </v-tab>
-            </v-tabs>
-        </v-toolbar>
-        <v-tabs-items v-model="activeTab">
-            <v-tab-item id="overview">
-                <Overview />
-            </v-tab-item>
-            <v-tab-item id="attributes">
-                <Attributes />
-            </v-tab-item>
-            <v-tab-item id="combat">
-                <Combat />
-            </v-tab-item>
-            <v-tab-item id="civil">
-                <Civil />
-            </v-tab-item>
-            <v-tab-item id="talents">
-                <Talents />
-            </v-tab-item>
-        </v-tabs-items>
-
-        <v-fab-transition>
-            <v-btn v-show="!hideFab" color="primary" @click="addPartyMember" dark fixed bottom right fab style="bottom: 72px;">
-                <v-icon>add</v-icon>
-            </v-btn>
-        </v-fab-transition>
-
-        <v-bottom-nav :value="true" :active.sync="activeCharacter.character" fixed dark id="bottom-nav">
-            <div class="bottom-nav__scroll-container">
-                <v-btn v-for="member in partyState.members" :key="member._id" flat :value="member._id" @click="switchCharacter(member)" color="primary">
-                    {{ member.name }}
-                    <v-icon>account_circle</v-icon>
+            <v-toolbar color="primary" class="elevation-4 mb-3" dark tabs>
+                <v-toolbar-side-icon @click.stop="toggleDrawer"></v-toolbar-side-icon>
+                <v-toolbar-title>
+                    <input v-model="characterState.name" class="inline-input" :disabled="nameDisabled" style="width: 360px;">
+                </v-toolbar-title>
+                <v-spacer></v-spacer>
+                <v-btn icon @click="decLevel()">
+                    <v-icon>remove</v-icon>
                 </v-btn>
-            </div>
-        </v-bottom-nav>
+                <input v-model.number.lazy="characterState.level" @change="changeLevel()" class="text-xs-center inline-input">
+                <v-btn icon @click="incLevel()">
+                    <v-icon>add</v-icon>
+                </v-btn>
+                <v-tabs v-model="activeTab" slot="extension" centered color="primary">
+                    <v-tab href="#overview" ripple>Overview</v-tab>
+                    <v-tab href="#attributes" ripple>
+                        Attributes
+                        <v-subheader class="pl-2 pr-0">{{ attributeState.unspent }}</v-subheader>
+                    </v-tab>
+                    <v-tab href="#combat" ripple>
+                        Combat
+                        <v-subheader class="pl-2 pr-0">{{ combatAbilityState.unspent }}</v-subheader>
+                    </v-tab>
+                    <v-tab href="#civil" ripple>
+                        Civil
+                        <v-subheader class="pl-2 pr-0">{{ civilAbilityState.unspent }}</v-subheader>
+                    </v-tab>
+                    <v-tab href="#talents" ripple>
+                        Talents
+                        <v-subheader class="pl-2 pr-0">{{ talentState.unspent }}</v-subheader>
+                    </v-tab>
+                </v-tabs>
+            </v-toolbar>
 
-        <v-snackbar :timeout="snackbarTimeout" bottom left v-model="snackbar">
-            {{ snackbarMessage }}
-            <v-btn flat color="accent" @click.native="snackbar = false">Close</v-btn>
-        </v-snackbar>
+            <v-tabs-items v-model="activeTab">
+                <v-tab-item id="overview">
+                    <Overview />
+                </v-tab-item>
+                <v-tab-item id="attributes">
+                    <Attributes />
+                </v-tab-item>
+                <v-tab-item id="combat">
+                    <Combat />
+                </v-tab-item>
+                <v-tab-item id="civil">
+                    <Civil />
+                </v-tab-item>
+                <v-tab-item id="talents">
+                    <Talents />
+                </v-tab-item>
+            </v-tabs-items>
+
+            <v-fab-transition>
+                <v-btn v-show="!hideFab" color="primary" @click="addPartyMember" dark fixed bottom right fab style="bottom: 72px;">
+                    <v-icon>add</v-icon>
+                </v-btn>
+            </v-fab-transition>
+
+            <v-bottom-nav :value="true" :active.sync="activeCharacter.character" fixed dark id="bottom-nav">
+                <div class="bottom-nav__scroll-container">
+                    <v-btn v-for="member in partyState.members" :key="member._id" flat :value="member._id" @click="switchCharacter(member)" color="primary">
+                        {{ member.name }}
+                        <v-icon>account_circle</v-icon>
+                    </v-btn>
+                </div>
+            </v-bottom-nav>
+
+            <v-snackbar :timeout="snackbarTimeout" bottom left v-model="snackbar">
+                {{ snackbarMessage }}
+                <v-btn flat color="accent" @click.native="snackbar = false">Close</v-btn>
+            </v-snackbar>
+
+        </div>
+        </v-slide-x-reverse-transition>
     </v-app>
 </template>
 
@@ -143,6 +236,9 @@
             this.$ee.on('disableName', this.disableName);
             this.$ee.on('toast', this.toast);
             this.$ee.on('switchCharacter', this.switchCharacter);
+            
+            this.isLoading = false;
+            setTimeout(() => { this.showMainContent = true; }, 600);
         },
         components: {
             Overview,
@@ -163,11 +259,17 @@
             btnDeleteColorDefault: 'accent',
             dialog: false,
             drawer: null,
+            isLoading: true,
             nameDisabled: false,
             parties: [],
             partyState: {
                 members: []
             },
+            showMainContent: false,
+            skills: [
+                'Beep',
+                'Boop'
+            ],
             snackbar: false,
             snackbarMessage: '',
             snackbarTimeout: 2500
