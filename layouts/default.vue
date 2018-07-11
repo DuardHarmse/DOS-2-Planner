@@ -238,7 +238,7 @@
             this.$ee.on('switchCharacter', this.switchCharacter);
             
             this.isLoading = false;
-            setTimeout(() => { this.showMainContent = true; }, 600);
+            setTimeout(() => { this.showMainContent = true; }, 750);
         },
         components: {
             Overview,
