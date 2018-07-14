@@ -186,9 +186,24 @@
             </v-tabs-items>
 
             <v-fab-transition>
-                <v-btn v-show="!hideFab" color="primary" @click="addPartyMember" dark fixed bottom right fab style="bottom: 72px;">
+                <!-- <v-btn v-show="!hideFab" color="primary" @click="addPartyMember" dark fixed bottom right fab style="bottom: 72px;">
                     <v-icon>add</v-icon>
-                </v-btn>
+                </v-btn> -->
+                <v-speed-dial v-model="fab" bottom right direction="bottom" transition="slide-y-transition" style="bottom: 130px;">
+                    <v-btn slot="activator" v-model="fab" color="blue darken-2" dark fab>
+                        <v-icon>account_circle</v-icon>
+                        <v-icon>close</v-icon>
+                    </v-btn>
+                    <v-btn fab dark small color="green">
+                        <v-icon>edit</v-icon>
+                    </v-btn>
+                    <v-btn fab dark small color="indigo">
+                        <v-icon>add</v-icon>
+                    </v-btn>
+                    <v-btn fab dark small color="red">
+                        <v-icon>delete</v-icon>
+                    </v-btn>
+                </v-speed-dial>
             </v-fab-transition>
 
             <v-bottom-nav :value="true" :active.sync="activeCharacter.character" fixed dark id="bottom-nav">
@@ -259,6 +274,7 @@
             btnDeleteColorDefault: 'accent',
             dialog: false,
             drawer: null,
+            fab: true,
             isLoading: true,
             nameDisabled: false,
             parties: [],

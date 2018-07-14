@@ -3,7 +3,7 @@
         <v-flex xl6 offset-xl3 lg8 offset-lg2 md10 offset-md1>
             <v-card flat>
                 <v-card-text class="pa-0">
-                    <v-data-table v-bind:headers="headers" :items="characterState.attributes" :loading="true" hide-actions class="elevation-1">
+                    <v-data-table v-bind:headers="headers" :items="items" item-key="_id" :loading="true" hide-actions class="elevation-1">
                         <template slot="headers" slot-scope="props">
                             <tr>
                                 <th v-for="header in props.headers" v-if="header.id != 'unspent_attributes'" :key="header.text" :class="getHeaderClass(header.align)">{{ header.text }}</th>
@@ -12,16 +12,27 @@
                         </template>
                         <v-progress-linear v-model="percentage" slot="progress" color="blue"></v-progress-linear>
                         <template slot="items" slot-scope="props">
-                            <td>{{ props.item.name }}</td>
-                            <td class="text-xs-right">
+                            <td class="px-2">
+                                <v-btn flat icon @click.stop="props.expanded = !props.expanded">
+                                    <v-icon v-if="props.expanded">keyboard_arrow_up</v-icon>
+                                    <v-icon v-else>keyboard_arrow_down</v-icon>
+                                </v-btn>
+                                <span>{{ props.item.name }}</span>
+                            </td>
+                            <td class="px-2 text-xs-right">
                                 <v-btn flat icon @click="decAttribute(props.item)">
                                     <v-icon>remove</v-icon>
                                 </v-btn>
-                                <input v-model.number.lazy="props.item.points" @change="changeAttribute(props.item)" class="text-xs-center inline-input">
+                                <input v-model.number.lazy="characterState.attributes[props.item._id]" @change="changeAttribute(props.item)" class="text-xs-center inline-input">
                                 <v-btn flat icon @click="incAttribute(props.item)">
                                     <v-icon>add</v-icon>
                                 </v-btn>
                             </td>
+                        </template>
+                        <template slot="expand" slot-scope="props">
+                            <v-card flat>
+                                <v-card-text>{{ props.item.description }}</v-card-text>
+                            </v-card>
                         </template>
                     </v-data-table>
                 </v-card-text>
@@ -45,6 +56,10 @@
             this.$ee.on('resetAttributes', this.resetAttributes);
             this.$ee.on('incAttrValue', this.incValue);
             this.$ee.on('incAttrBonus', this.incBonus);
+
+            this.$db.getAttributes().then((attributes) => {
+                this.items = attributes;
+            });
         },
         data: data => ({
             activeCharacter: {},
@@ -60,6 +75,7 @@
                     align: "right"
                 }
             ],
+            items: [],
             partyState: {},
             value: 1
         }),
@@ -76,7 +92,7 @@
                 }
             },
             base() {
-                return 10 * this.characterState.attributes.length;
+                return 10 * this.items.length;
             },
             fromLevel() {
                 return ((this.characterState.level - 1) * 2 + 3) * this.value;
@@ -84,8 +100,8 @@
             spent() {
                 let total = 0;
 
-                for (let i = 0, l = this.characterState.attributes.length; i < l; i++) {
-                    total += this.characterState.attributes[i].points;
+                for (let attr in this.characterState.attributes) {
+                    total += this.characterState.attributes[attr];
                 }
 
                 return total;
@@ -115,38 +131,38 @@
             },
             incAttribute: function(item) {
                 if (this.unspent > 0) {
-                    item.points += this.value;
+                    this.characterState.attributes[item._id] += this.value;
                 }
             },
             decAttribute: function(item) {
-                if (item.points > 10) {
-                    item.points -= this.value;
+                if (this.characterState.attributes[item._id] > 10) {
+                    this.characterState.attributes[item._id] -= this.value;
                 }
             },
             resetAttributes: function() {
-                for (let i = 0, l = this.characterState.attributes.length; i < l; i++) {
-                    this.characterState.attributes[i].points = 10;
+                for (let attr in this.characterState.attributes) {
+                    this.characterState.attributes[attr] = 10;
                 }
             },
             changeAttribute: function(item) {
                 if (this.unspent < 0) {
-                    item.points += this.unspent;
-                } else if (item.points < 10) {
-                    item.points = 10;
+                    this.characterState.attributes[item._id] += this.unspent;
+                } else if (this.characterState.attributes[item._id] < 10) {
+                    this.characterState.attributes[item._id] = 10;
                 }
             },
             incValue(inc) {
                 if (inc < 0) {
-                    for (let attribute of this.characterState.attributes) {
-                        attribute.points = ((attribute.points - 10) / this.value) + 10;
+                    for (let attr in this.characterState.attributes) {
+                        this.characterState.attributes[attr] = ((this.characterState.attributes[attr] - 10) / this.value) + 10;
                     }
                 }
 
                 this.value += inc;
 
                 if (this.value > 0) {
-                    for (let attribute of this.characterState.attributes) {
-                        attribute.points = ((attribute.points - 10) * this.value) + 10;
+                    for (let attr in this.characterState.attributes) {
+                        this.characterState.attributes[attr] = ((this.characterState.attributes[attr] - 10) * this.value) + 10;
                     }
                 }
             },

@@ -12,6 +12,7 @@ const dbs = {
     origins: () => new MiniPouchDB('origins'),
     characters: () => new MiniPouchDB('characters'),
     parties: () => new MiniPouchDB('parties'),
+    attributes: () => new MiniPouchDB('attributes'),
     combatAbilities: () => new MiniPouchDB('combat-abilities'),
     civilAbilities: () => new MiniPouchDB('civil-abilities'),
     talents: () => new MiniPouchDB('talents')
@@ -107,7 +108,7 @@ function wait(milliseconds) {
 
 export async function initDb() {
     try {
-        if (await dbExists(['races', 'origins', 'characters', 'parties', 'combat-abilities', 'civil-abilities', 'talents'], true)) {
+        if (await dbExists(['races', 'origins', 'characters', 'parties', 'attributes', 'combat-abilities', 'civil-abilities', 'talents'], true)) {
             return true;
         }
 
@@ -126,9 +127,15 @@ export async function initDb() {
             dbCharacters = dbs.characters(),
             dbParties = dbs.parties(),
 
+            dbAttributes = dbs.attributes(),
             dbCombatAbilities = dbs.combatAbilities(),
             dbCivilAbilities = dbs.civilAbilities(),
             dbTalents = dbs.talents();
+
+        let attributesMap = {};
+        for (let attr of attributes) {
+            attributesMap[attr._id] = attr.points;
+        }
 
         let characters = [
             {
@@ -137,7 +144,7 @@ export async function initDb() {
                 origin: origins[0]._id,
                 race: races[0]._id,
                 level: 1,
-                attributes,
+                attributes: attributesMap,
                 combatAbilities: {},
                 civilAbilities: {},
                 talents: []
@@ -165,6 +172,7 @@ export async function initDb() {
             dbOrigins.bulkDocs(origins),
             dbCharacters.bulkDocs(characters),
             dbParties.bulkDocs(parties),
+            dbAttributes.bulkDocs(attributes),
             dbCombatAbilities.bulkDocs(combatAbilities),
             dbCivilAbilities.bulkDocs(civilAbilities),
             dbTalents.bulkDocs(talents)
@@ -306,13 +314,20 @@ export async function addPartyMember(party) {
 
 async function addCharacter(name) {
     let dbCharacters = new PouchDB('characters');
+    let attributes = await getAll('attributes');
+
+    let attributesMap = {};
+    for (let attr of attributes) {
+        attributesMap[attr._id] = attr.points;
+    }
+
     let characterPutResult = await dbCharacters.put({
         _id: uuidv1(),
         name,
         origin: 'custom',
         race: 'dwarf',
         level: 1,
-        attributes: (await axios.get('/json/attributes.json')).data,
+        attributes: attributesMap,
         combatAbilities: {},
         civilAbilities: {},
         talents: []
@@ -401,6 +416,10 @@ export async function deleteCharacter(character, party) {
     catch (err) {
         console.error(err);
     }
+}
+
+export async function getAttributes() {
+    return await getAll('attributes');
 }
 
 export async function getCombatAbilities() {

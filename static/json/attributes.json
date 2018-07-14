@@ -2,31 +2,72 @@
   {
     "_id": "strength",
     "name": "Strength",
-    "points": 10
+    "points": 10,
+    "description": "Increases the damage dealt with strength-based weapons and skills, as well as the carry weight and the ability to move heavier objects.",
+    "perksAboveBase": [
+      "+5% damage",
+      "+10 additional carry weight",
+      "+7.5 object movement weight"
+    ],
+    "lossesBelowBase": [
+      "-5% damage"
+    ]
   },
   {
     "_id": "finesse",
     "name": "Finesse",
-    "points": 10
+    "points": 10,
+    "description": "Increases damage dealt with finesse-based weapons and skills.",
+    "perksAboveBase": [
+      "+5% damage"
+    ],
+    "lossesBelowBase": [
+      "-5% damage"
+    ]
   },
   {
     "_id": "intelligence",
     "name": "Intelligence",
-    "points": 10
+    "points": 10,
+    "description": "Increases damage dealt with intelligence-based weapons and skills.",
+    "perksAboveBase": [
+      "+5% damage"
+    ],
+    "lossesBelowBase": [
+      "-5% damage"
+    ]
   },
   {
     "_id": "constitution",
     "name": "Constitution",
-    "points": 10
-  },
-  {
-    "_id": "wits",
-    "name": "Wits",
-    "points": 10
+    "points": 10,
+    "description": "Determines the amount of Vitality the character has.",
+    "perksAboveBase": [
+      "+7% Vitality"
+    ],
+    "lossesBelowBase": [
+      "-7% Vitality"
+    ]
   },
   {
     "_id": "memory",
     "name": "Memory",
-    "points": 10
+    "points": 10,
+    "description": "Determines how many Skills can be memorized at any one time.  Most skills only require a single memory slot. More powerful skills require more memory slots and source points.",
+    "perksAboveBase": [
+      "+1 Memory Slot"
+    ],
+    "lossesBelowBase": []
+  },
+  {
+    "_id": "wits",
+    "name": "Wits",
+    "points": 10,
+    "description": "Affects your Critical Chance, Initiative, and ability to detect traps and find hidden treasures.",
+    "perksAboveBase": [
+      "+1 Initiative",
+      "+1% Critical Chance"
+    ],
+    "lossesBelowBase": []
   }
 ]

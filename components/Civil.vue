@@ -3,7 +3,7 @@
         <v-flex xl6 offset-xl3 lg8 offset-lg2 md10 offset-md1>
             <v-card flat>
                 <v-card-text class="pa-0">
-                    <v-data-table v-bind:headers="headers" :items="items" item-key="name" :loading="true" hide-actions class="elevation-1">
+                    <v-data-table v-bind:headers="headers" :items="items" item-key="_id" :loading="true" hide-actions class="elevation-1">
                         <template slot="headers" slot-scope="props">
                             <tr>
                                 <th v-for="header in props.headers" v-if="header.id != 'unspent_civl'" :key="header.text" :class="getHeaderClass(header.align)">{{ header.text }}</th>
