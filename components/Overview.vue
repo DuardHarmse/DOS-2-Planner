@@ -1,6 +1,11 @@
 <template>
-    <v-layout id="overview" class="pa-3">
+    <v-layout id="overview" class="pa-3" wrap>
+        <v-flex xl6 offset-xl3 lg8 offset-lg2 md10 offset-md1 class="mb-3">
+            <v-subheader>Party</v-subheader>
+            <v-text-field v-model="partyState.name" label="Party name" solo @input="updatePartyName"></v-text-field>
+        </v-flex>
         <v-flex xl6 offset-xl3 lg8 offset-lg2 md10 offset-md1>
+            <v-subheader>Character</v-subheader>
             <v-card>
                 <v-card-title primary-title>
                     <v-avatar class="primary white--text mr-2" size="32" v-text="characterState.level"></v-avatar>
@@ -30,10 +35,6 @@
                         </v-flex>
                     </v-layout>
                 </v-card-text>
-                <v-card-actions>
-                    <v-btn flat color="primary" @click="save" :disabled="btnSaveDisabled">Save</v-btn>
-                    <v-btn flat :color="btnDeleteColor" @click="confirmDelete" :disabled="btnDeleteDisabled" v-if="partyState.members.length > 1">{{ btnDeleteText }}</v-btn>
-                </v-card-actions>
             </v-card>
         </v-flex>
     </v-layout>
@@ -44,9 +45,6 @@
         mounted() {
             this.partyState = this.$store.activeParty;
             this.activeCharacter = this.$store.activeCharacter;
-
-            this.btnDeleteText = this.btnDeleteTextDefault;
-            this.btnDeleteColor = this.btnDeleteColorDefault;
 
             this.$watch('characterState.origin', this.checkRace);
 
@@ -77,21 +75,12 @@
         },
         data: data => ({
             activeCharacter: {},
-            btnDeleteColor: 'accent',
-            btnDeleteDisabled: false,
-            btnDeleteColorConfirm: 'red',
-            btnDeleteColorDefault: 'accent',
-            btnDeleteIsConfirming: false,
-            btnDeleteText: '',
-            btnDeleteTextConfirm: 'Confirm delete',
-            btnDeleteTextDefault: 'Delete',
-            btnDeleteTimeout: null,
-            btnSaveDisabled: false,
             origins: [],
             partyState: {
                 members: []
             },
-            races: []
+            races: [],
+            partyName: 'Party #1'
         }),
         computed: {
             characterState() {
@@ -148,55 +137,10 @@
                     this.characterState.race = origin.race;
                 }
             },
-            save() {
-                this.btnSaveDisabled = true;
-
-                this.$db.updateCharacter(this.characterState).then((result) => {
-                    this.btnSaveDisabled = false;
-                    this.$ee.emit('toast', 'Saved');
-
-                    console.log(`Active character updated to revision '${result.rev}'.`);
-                    this.characterState._rev = result.rev;
-                    this.partyState.members.find(member => member._id == this.characterState._id).name = this.characterState.name;
+            updatePartyName(value) {
+                this.$ee.emit('updateActiveParty', {
+                    name: value
                 });
-            },
-            confirmDelete() {
-                if (!this.btnDeleteIsConfirming) {
-                    this.btnDeleteIsConfirming = true;
-                    this.btnDeleteText = this.btnDeleteTextConfirm;
-                    this.btnDeleteColor = this.btnDeleteColorConfirm;
-                    this.btnDeleteTimeout = setTimeout(this.resetBtnDelete, 2500);
-                }
-                else {
-                    this.delete();
-                }
-            },
-            resetBtnDelete() {
-                clearInterval(this.btnDeleteTimeout);
-                this.btnDeleteIsConfirming = false;
-                this.btnDeleteText = this.btnDeleteTextDefault;
-                this.btnDeleteColor = this.btnDeleteColorDefault;
-                this.btnDeleteDisabled = false;
-            },
-            delete() {
-                this.btnDeleteDisabled = true;
-
-                if (this.partyState.members.length > 1) {
-                    this.$db.deleteCharacter(this.characterState, this.partyState).then((party) => {
-                        Object.assign(this.partyState, party);
-
-                        this.$ee.emit('switchCharacter', this.partyState.members[0]);
-                        this.resetBtnDelete();
-                        this.$ee.emit('toast', 'Character deleted');
-                    });
-                }
-                else {
-                    this.$db.resetCharacter(this.$ac).then((character) => {
-                        // this.$ee.emit('switchCharacter', character);
-                        this.resetBtnDelete();
-                        this.$ee.emit('toast', 'Character reset to default');
-                    });
-                }
             }
         }
     }

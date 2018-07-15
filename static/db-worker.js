@@ -8,14 +8,14 @@ var MiniPouchDB = PouchDB.defaults({
 });
 
 const dbs = {
-    races: () => new MiniPouchDB('races'),
-    origins: () => new MiniPouchDB('origins'),
-    characters: () => new MiniPouchDB('characters'),
-    parties: () => new MiniPouchDB('parties'),
-    attributes: () => new MiniPouchDB('attributes'),
-    combatAbilities: () => new MiniPouchDB('combat-abilities'),
-    civilAbilities: () => new MiniPouchDB('civil-abilities'),
-    talents: () => new MiniPouchDB('talents')
+    'races': () => new MiniPouchDB('races'),
+    'origins': () => new MiniPouchDB('origins'),
+    'characters': () => new MiniPouchDB('characters'),
+    'parties': () => new MiniPouchDB('parties'),
+    'attributes': () => new MiniPouchDB('attributes'),
+    'combat-abilities': () => new MiniPouchDB('combat-abilities'),
+    'civil-abilities': () => new MiniPouchDB('civil-abilities'),
+    'talents': () => new MiniPouchDB('talents')
 };
 
 async function dbExists(dbNames, destroyIfNotExists) {
@@ -23,7 +23,7 @@ async function dbExists(dbNames, destroyIfNotExists) {
 
     try {
         for (let dbName of dbNames) {
-            let db = new PouchDB(dbName);
+            let db = dbs[dbName]();
             let details = await db.info();
             let exists = details.doc_count != 0 || details.update_seq != 0;
 
@@ -79,7 +79,7 @@ async function getAll(dbName) {
     let db = null;
 
     if (typeof (dbName) == 'string') {
-        db = new PouchDB(dbName);
+        db = dbs[dbName]();
     }
     else {
         db = dbName;
@@ -128,8 +128,8 @@ export async function initDb() {
             dbParties = dbs.parties(),
 
             dbAttributes = dbs.attributes(),
-            dbCombatAbilities = dbs.combatAbilities(),
-            dbCivilAbilities = dbs.civilAbilities(),
+            dbCombatAbilities = dbs['combat-abilities'](),
+            dbCivilAbilities = dbs['civil-abilities'](),
             dbTalents = dbs.talents();
 
         let attributesMap = {};
@@ -245,7 +245,7 @@ export async function getActiveParty() {
 }
 
 export async function getActiveCharacter() {
-    let dbCharacters = new PouchDB('characters');
+    let dbCharacters = dbs.characters();
 
     let activeCharacterIndicator = await dbCharacters.get('active');
     // let activeCharacter = await dbCharacters.get(activeCharacterIndicator.character);
@@ -280,7 +280,7 @@ async function populateCharacterDetails(character) {
 }
 
 export async function switchActiveCharacter(newActiveCharacterId) {
-    let dbCharacters = new PouchDB('characters');
+    let dbCharacters = dbs.characters();
     let newActiveCharacter = await dbCharacters.get(newActiveCharacterId);
 
     if (newActiveCharacter) {
@@ -299,7 +299,7 @@ export async function switchActiveCharacter(newActiveCharacterId) {
 }
 
 export async function addPartyMember(party) {
-    let dbParties = new PouchDB('parties');
+    let dbParties = dbs.parties();
     let activeParty = await dbParties.get(party._id);
     let character = await addCharacter(`Character #${activeParty.members.length + 1}`);
 
@@ -312,8 +312,20 @@ export async function addPartyMember(party) {
     };
 }
 
+export async function updateParty(party) {
+    let db = dbs.parties();
+    let members = party.members.slice();
+    let result = await db.put(Object.assign(party, {
+        members: party.members.map(member => member._id)
+    }));
+
+    party.members = members;
+
+    return result;
+}
+
 async function addCharacter(name) {
-    let dbCharacters = new PouchDB('characters');
+    let dbCharacters = dbs.characters();
     let attributes = await getAll('attributes');
 
     let attributesMap = {};
@@ -338,7 +350,7 @@ async function addCharacter(name) {
 }
 
 export async function updateCharacter(character) {
-    let db = new PouchDB('characters');
+    let db = dbs.characters();
 
     let combatAbilities = character.combatAbilities,
         civilAbilities = character.civilAbilities;
@@ -368,7 +380,7 @@ export async function updateCharacter(character) {
 }
 
 export async function resetCharacter(character) {
-    let dbCharacters = new PouchDB('characters');
+    let dbCharacters = dbs.characters();
 
     Object.assign(character, {
         name: 'Character #1',
@@ -391,8 +403,8 @@ export async function resetCharacter(character) {
 
 export async function deleteCharacter(character, party) {
     try {
-        let dbCharacters = new PouchDB('characters');
-        let dbParties = new PouchDB('parties');
+        let dbCharacters = dbs.characters();
+        let dbParties = dbs.parties();
 
         // Remove deleted character from the party's member array.
         party.members = party.members.filter(member => member._id != character._id);
@@ -435,7 +447,7 @@ export async function getTalents() {
 }
 
 export async function addParty() {
-    let dbParties = new PouchDB('parties');
+    let dbParties = dbs.parties();
     let numParties = (await getAll(dbParties)).filter(party => party._id != 'active').length;
     let character = await addCharacter('Character #1');
 
